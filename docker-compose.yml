@@ -1,0 +1,50 @@
+version: '3.9'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfiles/frontend.dockerfile
+      args:
+        ENVIRONMENT: development # Change to 'production' for production builds
+    container_name: task_frontend
+    image: aflahsidhique/task_frontend:latest
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfiles/backend.dockerfile
+    container_name: task_backend
+    image: aflahsidhique/task_backend:latest
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env.production
+    volumes:
+      - ./backend/uploads:/usr/src/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    container_name: task_postgres
+    image: postgres:13
+    environment:
+      POSTGRES_USER: taskmanager
+      POSTGRES_PASSWORD: taskmanager
+      POSTGRES_DB: taskmanager
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskmanager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
