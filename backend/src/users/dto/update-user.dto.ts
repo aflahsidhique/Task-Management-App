@@ -1,0 +1,41 @@
+/* eslint-disable prettier/prettier */
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
+export class UpdateUserDto {
+  @ApiProperty({ description: 'Full name of the user', required: false })
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @ApiProperty({ description: 'Email address of the user', required: false })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @ApiProperty({ description: 'Job title of the user', required: false })
+  @IsOptional()
+  @IsString()
+  jobTitle?: string;
+
+  @ApiProperty({ description: 'Avatar URL of the user', required: false })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
+  @ApiProperty({ description: 'ID of the role assigned to the user', required: false })
+  @IsOptional()
+  @IsNumber()
+  roleId?: number;
+
+  @ApiProperty({ description: 'Whether the user account is active', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
