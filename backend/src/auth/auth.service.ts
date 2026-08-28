@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/user.entity';
+import { User, UserStatus } from '../users/user.entity';
 import { MailService } from '../mail/mail.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -38,7 +38,7 @@ export class AuthService {
     if (!passwordMatches) {
       throw new UnauthorizedException('Invalid email or password');
     }
-    if (!user.isActive) {
+    if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('This account has been deactivated');
     }
     return user;

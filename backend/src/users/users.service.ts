@@ -3,12 +3,15 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User } from './user.entity';
+import { User, UserStatus } from './user.entity';
 import { Role } from '../roles/role.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
+import { PaginatedResult, paginate } from '../common/dto/paginated-result';
 
 const SALT_ROUNDS = 10;
+const SORTABLE_COLUMNS = ['id', 'fullName', 'email', 'status', 'createdAt'];
 
 @Injectable()
 export class UsersService {
@@ -19,8 +22,36 @@ export class UsersService {
     private readonly roleRepository: Repository<Role>,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({ order: { id: 'ASC' } });
+  async findAll(query: ListUsersQueryDto): Promise<PaginatedResult<User>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const sortBy = SORTABLE_COLUMNS.includes(query.sortBy ?? '')
+      ? query.sortBy
+      : 'createdAt';
+    const sortOrder = query.sortOrder ?? 'DESC';
+
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role');
+
+    if (query.search) {
+      qb.andWhere('(user.fullName ILIKE :search OR user.email ILIKE :search)', {
+        search: `%${query.search}%`,
+      });
+    }
+    if (query.status) {
+      qb.andWhere('user.status = :status', { status: query.status });
+    }
+    if (query.roleId) {
+      qb.andWhere('role.id = :roleId', { roleId: query.roleId });
+    }
+
+    qb.orderBy(`user.${sortBy}`, sortOrder)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [items, totalItems] = await qb.getManyAndCount();
+    return paginate(items, totalItems, page, limit);
   }
 
   async findById(id: number): Promise<User> {
@@ -96,10 +127,21 @@ export class UsersService {
       email: createUserDto.email,
       jobTitle: createUserDto.jobTitle,
       avatarUrl: createUserDto.avatarUrl,
+      mobile: createUserDto.mobile,
       passwordHash,
       role,
     });
     return this.userRepository.save(user);
+  }
+
+  async setStatus(id: number, status: UserStatus): Promise<User> {
+    await this.findById(id);
+    await this.userRepository.update(id, { status });
+    if (status === UserStatus.INACTIVE) {
+      // Deactivated accounts can no longer use an outstanding refresh token.
+      await this.userRepository.update(id, { refreshTokenHash: null });
+    }
+    return this.findById(id);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {

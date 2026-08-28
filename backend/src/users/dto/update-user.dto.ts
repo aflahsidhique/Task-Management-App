@@ -1,12 +1,13 @@
 /* eslint-disable prettier/prettier */
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsEmail,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { UserStatus } from '../user.entity';
 
 export class UpdateUserDto {
   @ApiProperty({ description: 'Full name of the user', required: false })
@@ -29,13 +30,22 @@ export class UpdateUserDto {
   @IsString()
   avatarUrl?: string;
 
+  @ApiProperty({ description: 'Mobile number of the user', required: false })
+  @IsOptional()
+  @IsString()
+  mobile?: string;
+
   @ApiProperty({ description: 'ID of the role assigned to the user', required: false })
   @IsOptional()
   @IsNumber()
   roleId?: number;
 
-  @ApiProperty({ description: 'Whether the user account is active', required: false })
+  @ApiProperty({
+    description: 'Account status',
+    enum: UserStatus,
+    required: false,
+  })
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 }

@@ -33,6 +33,11 @@ export class CreateUserDto {
   @IsString()
   avatarUrl?: string;
 
+  @ApiProperty({ description: 'Mobile number of the user', required: false })
+  @IsOptional()
+  @IsString()
+  mobile?: string;
+
   @ApiProperty({ description: 'ID of the role assigned to the user' })
   @IsNumber()
   roleId: number;

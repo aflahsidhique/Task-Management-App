@@ -3,12 +3,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Role } from '../roles/role.entity';
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
 
 @Entity()
 export class User {
@@ -18,6 +24,7 @@ export class User {
   @Column()
   fullName: string;
 
+  @Index({ unique: true })
   @Column({ unique: true })
   email: string;
 
@@ -30,12 +37,16 @@ export class User {
   @Column({ nullable: true })
   jobTitle: string;
 
+  @Column({ nullable: true })
+  mobile: string;
+
   @ManyToOne(() => Role, { eager: true, nullable: true })
   @JoinColumn()
   role: Role;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Index()
+  @Column({ type: 'enum', enum: UserStatus, default: UserStatus.ACTIVE })
+  status: UserStatus;
 
   @Column({ select: false, nullable: true })
   refreshTokenHash: string | null;
