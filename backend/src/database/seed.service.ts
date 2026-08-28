@@ -54,6 +54,19 @@ export class SeedService implements OnApplicationBootstrap {
   private async seedRoles(): Promise<Role[]> {
     const definitions = [
       {
+        name: 'Super Admin',
+        description: 'Unrestricted access to every module (implicitly bypasses role checks)',
+        permissions: [
+          'manage_users',
+          'manage_roles',
+          'manage_projects',
+          'manage_tasks',
+          'manage_files',
+          'view_reports',
+          'manage_settings',
+        ],
+      },
+      {
         name: 'Admin',
         description: 'Full access to all modules',
         permissions: [
@@ -70,6 +83,11 @@ export class SeedService implements OnApplicationBootstrap {
         name: 'Project Manager',
         description: 'Manages projects, tasks and reports',
         permissions: ['manage_projects', 'manage_tasks', 'view_reports', 'manage_files'],
+      },
+      {
+        name: 'Team Lead',
+        description: 'Leads a team, manages tasks and reviews progress',
+        permissions: ['manage_tasks', 'manage_files', 'view_reports'],
       },
       {
         name: 'Developer',
@@ -105,6 +123,8 @@ export class SeedService implements OnApplicationBootstrap {
       { fullName: 'Navas K.', email: 'navas.k@example.com', jobTitle: 'Backend Developer', role: byName('Developer') },
       { fullName: 'Layla S.', email: 'layla.s@example.com', jobTitle: 'Product Designer', role: byName('Designer') },
       { fullName: 'Admin User', email: 'admin@example.com', jobTitle: 'System Administrator', role: byName('Admin') },
+      { fullName: 'Yusuf Rahman', email: 'yusuf.rahman@example.com', jobTitle: 'Super Administrator', role: byName('Super Admin') },
+      { fullName: 'Zainab Kutty', email: 'zainab.kutty@example.com', jobTitle: 'Team Lead', role: byName('Team Lead') },
     ];
 
     const users = definitions.map((d) =>

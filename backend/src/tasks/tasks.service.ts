@@ -14,7 +14,7 @@ import { NotificationType } from '../notifications/notification.entity';
 import { User } from '../users/user.entity';
 import { PaginatedResult, paginate } from '../common/dto/paginated-result';
 
-const MANAGE_ROLES = ['Admin', 'Project Manager'];
+const MANAGE_ROLES = ['Super Admin', 'Admin', 'Project Manager'];
 const SORTABLE_COLUMNS = ['id', 'title', 'status', 'priority', 'dueDate', 'createdAt'];
 
 function canManageTask(user: User, task: Task): boolean {

@@ -10,7 +10,7 @@ import { ActivityType } from '../activities/activity.entity';
 import { User } from '../users/user.entity';
 
 const UPLOAD_DIR = './uploads';
-const MANAGE_ROLES = ['Admin', 'Project Manager'];
+const MANAGE_ROLES = ['Super Admin', 'Admin', 'Project Manager'];
 
 @Injectable()
 export class FilesService {

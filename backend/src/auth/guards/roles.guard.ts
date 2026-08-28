@@ -17,6 +17,11 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    return !!user?.role && requiredRoles.includes(user.role.name);
+    if (!user?.role) {
+      return false;
+    }
+    // Super Admin is implicitly authorized wherever any other role is
+    // named, so every @Roles(...) check doesn't need to spell it out.
+    return user.role.name === 'Super Admin' || requiredRoles.includes(user.role.name);
   }
 }

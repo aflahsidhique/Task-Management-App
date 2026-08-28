@@ -17,7 +17,7 @@ import { ActivityType } from '../activities/activity.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/notification.entity';
 
-const MANAGE_ROLES = ['Admin', 'Project Manager'];
+const MANAGE_ROLES = ['Super Admin', 'Admin', 'Project Manager'];
 
 function truncate(text: string, max = 80): string {
   return text.length > max ? `${text.slice(0, max)}...` : text;
