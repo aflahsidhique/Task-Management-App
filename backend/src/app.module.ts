@@ -17,12 +17,14 @@ import { ActivitiesModule } from './activities/activities.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { DatabaseModule } from './database/database.module';
+import { CommentsModule } from './comments/comments.module';
 import { User } from './users/user.entity';
 import { Role } from './roles/role.entity';
 import { Project } from './projects/project.entity';
 import { Notification } from './notifications/notification.entity';
 import { FileAsset } from './files/file-asset.entity';
 import { Activity } from './activities/activity.entity';
+import { Comment } from './comments/comment.entity';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { PermissionsGuard } from './auth/guards/permissions.guard';
@@ -49,7 +51,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [Task, User, Role, Project, Notification, FileAsset, Activity],
+      entities: [Task, User, Role, Project, Notification, FileAsset, Activity, Comment],
       synchronize: true, // For development only
     }),
     AuthModule,
@@ -63,6 +65,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     DashboardModule,
     ReportsModule,
     DatabaseModule,
+    CommentsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

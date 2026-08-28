@@ -10,6 +10,8 @@ import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { User, UserStatus } from '../users/user.entity';
 import { MailService } from '../mail/mail.service';
+import { ActivitiesService } from '../activities/activities.service';
+import { ActivityType } from '../activities/activity.entity';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
@@ -27,6 +29,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly activitiesService: ActivitiesService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
@@ -47,6 +50,13 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
     const tokens = await this.issueTokens(user);
+    await this.activitiesService.log({
+      userId: user.id,
+      type: ActivityType.USER_LOGIN,
+      entityType: 'user',
+      entityId: user.id,
+      description: `${user.fullName} logged in`,
+    });
     return { ...tokens, user: this.sanitizeUser(user) };
   }
 
@@ -80,6 +90,13 @@ export class AuthService {
 
   async logout(userId: number): Promise<void> {
     await this.usersService.setRefreshTokenHash(userId, null);
+    await this.activitiesService.log({
+      userId,
+      type: ActivityType.USER_LOGOUT,
+      entityType: 'user',
+      entityId: userId,
+      description: 'logged out',
+    });
   }
 
   async forgotPassword(email: string): Promise<{ message: string }> {
