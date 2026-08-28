@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -35,6 +36,7 @@ export class Task {
   @Column({ type: 'text' })
   description: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: TaskStatus,
@@ -42,6 +44,7 @@ export class Task {
   })
   status: TaskStatus;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: TaskPriority,
@@ -49,6 +52,7 @@ export class Task {
   })
   priority: TaskPriority;
 
+  @Index()
   @Column({ type: 'date', nullable: true })
   dueDate: Date;
 
@@ -60,9 +64,16 @@ export class Task {
   @JoinColumn()
   assignee: User;
 
+  /** The user who reported/created the task. */
   @ManyToOne(() => User, { eager: true, nullable: true })
   @JoinColumn()
-  createdBy: User;
+  reporter: User;
+
+  @Column({ type: 'decimal', precision: 6, scale: 2, nullable: true })
+  estimatedHours: number | null;
+
+  @Column({ type: 'decimal', precision: 6, scale: 2, nullable: true })
+  actualHours: number | null;
 
   @Column({ type: 'timestamp', nullable: true })
   completedAt: Date;

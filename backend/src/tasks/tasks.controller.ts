@@ -7,15 +7,19 @@ import {
   Param,
   Delete,
   Put,
+  Patch,
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Task, TaskStatus } from './task.entity';
+import { Task } from './task.entity';
 import { CreateTaskDto } from './create-task.dto';
 import { UpdateTaskDto } from './update-task.dto';
+import { ListTasksQueryDto } from './dto/list-tasks-query.dto';
+import { BulkUpdateTasksDto } from './dto/bulk-update-tasks.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { User } from '../users/user.entity';
 
 @ApiTags('tasks')
@@ -24,24 +28,22 @@ import { User } from '../users/user.entity';
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @ApiOperation({ summary: 'Retrieve all tasks' })
-  @ApiResponse({ status: 200, description: 'List of all tasks', type: [Task] })
+  @ApiOperation({ summary: 'Retrieve tasks (paginated, searchable, filterable)' })
+  @ApiResponse({ status: 200, description: 'Paginated list of tasks' })
   @Get()
-  getAllTasks(
-    @Query('projectId') projectId?: string,
-    @Query('assigneeId') assigneeId?: string,
-    @Query('status') status?: TaskStatus,
-    @Query('priority') priority?: string,
-    @Query('mine') mine?: string,
-    @CurrentUser() user?: User,
+  getAllTasks(@Query() query: ListTasksQueryDto, @CurrentUser() user?: User) {
+    return this.tasksService.getAllTasks(query, user?.id);
+  }
+
+  @ApiOperation({ summary: 'Update multiple tasks at once' })
+  @ApiResponse({ status: 200, description: 'Tasks updated successfully', type: [Task] })
+  @RequirePermissions('manage_tasks')
+  @Patch('bulk')
+  bulkUpdateTasks(
+    @Body() dto: BulkUpdateTasksDto,
+    @CurrentUser() user: User,
   ): Promise<Task[]> {
-    return this.tasksService.getAllTasks({
-      projectId: projectId ? parseInt(projectId, 10) : undefined,
-      assigneeId: assigneeId ? parseInt(assigneeId, 10) : undefined,
-      status,
-      priority,
-      mine: mine === 'true' ? user?.id : undefined,
-    });
+    return this.tasksService.bulkUpdateTasks(dto, user);
   }
 
   @ApiOperation({ summary: 'Retrieve a task by ID' })

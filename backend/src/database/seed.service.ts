@@ -222,7 +222,7 @@ export class SeedService implements OnApplicationBootstrap {
           dueDate,
           project,
           assignee,
-          createdBy: project.owner,
+          reporter: project.owner,
           completedAt: status === TaskStatus.DONE ? addDays(dueDate, -2) : null,
         } as Partial<Task>);
         tasksToInsert.push(task);
@@ -234,7 +234,7 @@ export class SeedService implements OnApplicationBootstrap {
 
     for (const task of saved) {
       await this.activitiesService.log({
-        userId: task.createdBy?.id ?? task.assignee?.id,
+        userId: task.reporter?.id ?? task.assignee?.id,
         type: task.status === TaskStatus.DONE ? ActivityType.TASK_COMPLETED : ActivityType.TASK_CREATED,
         entityType: 'task',
         entityId: task.id,

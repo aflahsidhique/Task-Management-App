@@ -42,4 +42,14 @@ export class CreateTaskDto {
   @IsOptional()
   @IsNumber()
   assigneeId?: number;
+
+  @ApiProperty({ description: 'Estimated hours to complete the task', required: false })
+  @IsOptional()
+  @IsNumber()
+  estimatedHours?: number;
+
+  @ApiProperty({ description: 'Actual hours spent on the task', required: false })
+  @IsOptional()
+  @IsNumber()
+  actualHours?: number;
 }

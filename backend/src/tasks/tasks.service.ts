@@ -1,31 +1,27 @@
 /* eslint-disable prettier/prettier */
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Task, TaskStatus } from './task.entity';
 import { CreateTaskDto } from './create-task.dto';
 import { UpdateTaskDto } from './update-task.dto';
+import { ListTasksQueryDto } from './dto/list-tasks-query.dto';
+import { BulkUpdateTasksDto } from './dto/bulk-update-tasks.dto';
 import { ActivitiesService } from '../activities/activities.service';
 import { ActivityType } from '../activities/activity.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/notification.entity';
 import { User } from '../users/user.entity';
+import { PaginatedResult, paginate } from '../common/dto/paginated-result';
 
 const MANAGE_ROLES = ['Admin', 'Project Manager'];
+const SORTABLE_COLUMNS = ['id', 'title', 'status', 'priority', 'dueDate', 'createdAt'];
 
 function canManageTask(user: User, task: Task): boolean {
   if (MANAGE_ROLES.includes(user.role?.name)) {
     return true;
   }
-  return task.assignee?.id === user.id || task.createdBy?.id === user.id;
-}
-
-export interface TaskFilters {
-  projectId?: number;
-  assigneeId?: number;
-  status?: TaskStatus;
-  priority?: string;
-  mine?: number;
+  return task.assignee?.id === user.id || task.reporter?.id === user.id;
 }
 
 @Injectable()
@@ -37,14 +33,49 @@ export class TasksService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async getAllTasks(filters: TaskFilters = {}): Promise<Task[]> {
-    const where: any = {};
-    if (filters.projectId) where.project = { id: filters.projectId };
-    if (filters.status) where.status = filters.status;
-    if (filters.priority) where.priority = filters.priority;
-    if (filters.mine) where.assignee = { id: filters.mine };
-    else if (filters.assigneeId) where.assignee = { id: filters.assigneeId };
-    return this.taskRepository.find({ where, order: { createdAt: 'DESC' } });
+  async getAllTasks(
+    query: ListTasksQueryDto,
+    currentUserId?: number,
+  ): Promise<PaginatedResult<Task>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const sortBy = SORTABLE_COLUMNS.includes(query.sortBy ?? '')
+      ? query.sortBy
+      : 'createdAt';
+    const sortOrder = query.sortOrder ?? 'DESC';
+
+    const qb = this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.project', 'project')
+      .leftJoinAndSelect('task.assignee', 'assignee')
+      .leftJoinAndSelect('task.reporter', 'reporter');
+
+    if (query.search) {
+      qb.andWhere('(task.title ILIKE :search OR task.description ILIKE :search)', {
+        search: `%${query.search}%`,
+      });
+    }
+    if (query.projectId) {
+      qb.andWhere('project.id = :projectId', { projectId: query.projectId });
+    }
+    if (query.status) {
+      qb.andWhere('task.status = :status', { status: query.status });
+    }
+    if (query.priority) {
+      qb.andWhere('task.priority = :priority', { priority: query.priority });
+    }
+    if (query.mine && currentUserId) {
+      qb.andWhere('assignee.id = :mineId', { mineId: currentUserId });
+    } else if (query.assigneeId) {
+      qb.andWhere('assignee.id = :assigneeId', { assigneeId: query.assigneeId });
+    }
+
+    qb.orderBy(`task.${sortBy}`, sortOrder)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [items, totalItems] = await qb.getManyAndCount();
+    return paginate(items, totalItems, page, limit);
   }
 
   async getTaskById(id: number): Promise<Task> {
@@ -61,7 +92,7 @@ export class TasksService {
       ...rest,
       ...(projectId ? { project: { id: projectId } as any } : {}),
       ...(assigneeId ? { assignee: { id: assigneeId } as any } : {}),
-      createdBy: { id: currentUserId } as any,
+      reporter: { id: currentUserId } as any,
     });
     const saved = await this.taskRepository.save(task);
     const full = await this.getTaskById(saved.id);
@@ -117,6 +148,47 @@ export class TasksService {
           : `updated task '${updated.title}'`,
     });
 
+    return updated;
+  }
+
+  async bulkUpdateTasks(dto: BulkUpdateTasksDto, currentUser: User): Promise<Task[]> {
+    const tasks = await this.taskRepository.find({ where: { id: In(dto.ids) } });
+    if (tasks.length !== dto.ids.length) {
+      const found = new Set(tasks.map((t) => t.id));
+      const missing = dto.ids.filter((id) => !found.has(id));
+      throw new NotFoundException(`Task(s) not found: ${missing.join(', ')}`);
+    }
+    const unauthorized = tasks.filter((t) => !canManageTask(currentUser, t));
+    if (unauthorized.length > 0) {
+      throw new ForbiddenException(
+        `You do not have permission to update task(s): ${unauthorized.map((t) => t.id).join(', ')}`,
+      );
+    }
+
+    const { status, priority, assigneeId, projectId } = dto.changes;
+    const updated: Task[] = [];
+    for (const task of tasks) {
+      const wasDone = task.status === TaskStatus.DONE;
+      const willBeDone = status === TaskStatus.DONE;
+      await this.taskRepository.save({
+        id: task.id,
+        ...(status !== undefined ? { status } : {}),
+        ...(priority !== undefined ? { priority } : {}),
+        ...(assigneeId !== undefined ? { assignee: { id: assigneeId } as any } : {}),
+        ...(projectId !== undefined ? { project: { id: projectId } as any } : {}),
+        ...(!wasDone && willBeDone ? { completedAt: new Date() } : {}),
+        ...(wasDone && status && status !== TaskStatus.DONE ? { completedAt: null } : {}),
+      });
+      const full = await this.getTaskById(task.id);
+      updated.push(full);
+      await this.activitiesService.log({
+        userId: currentUser.id,
+        type: !wasDone && willBeDone ? ActivityType.TASK_COMPLETED : ActivityType.TASK_UPDATED,
+        entityType: 'task',
+        entityId: full.id,
+        description: `bulk-updated task '${full.title}'`,
+      });
+    }
     return updated;
   }
 
