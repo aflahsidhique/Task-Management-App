@@ -34,10 +34,20 @@ apiClient.interceptors.response.use(
   },
 );
 
-export async function unwrap<T>(promise: Promise<{ data: T }>): Promise<T> {
+export async function unwrap<T>(promise: Promise<{ data: unknown }>): Promise<T> {
   try {
     const result = await promise;
-    return result.data;
+    const payload = result.data;
+    // Backend wraps successful responses as { success, statusCode, data, timestamp }.
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'success' in payload &&
+      'data' in payload
+    ) {
+      return (payload as { data: T }).data;
+    }
+    return payload as T;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
       const message =
