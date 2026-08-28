@@ -26,8 +26,37 @@ export interface ProjectInput {
   memberIds?: number[];
 }
 
+export interface ListProjectsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: ProjectStatus;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
 class ProjectService {
-  static async getProjects(params?: { status?: string; search?: string }): Promise<Project[]> {
+  static async getProjects(params?: ListProjectsParams): Promise<Project[]> {
+    const result = await unwrap<PaginatedResult<Project>>(
+      apiClient.get('/projects', { params: { limit: 1000, ...params } }),
+    );
+    return result.items;
+  }
+
+  static async getProjectsPage(
+    params?: ListProjectsParams,
+  ): Promise<PaginatedResult<Project>> {
     return unwrap(apiClient.get('/projects', { params }));
   }
 

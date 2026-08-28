@@ -1,19 +1,23 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Project } from './project.entity';
 import { User } from '../users/user.entity';
 import { Task, TaskStatus } from '../tasks/task.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { ListProjectsQueryDto } from './dto/list-projects-query.dto';
 import { ActivitiesService } from '../activities/activities.service';
 import { ActivityType } from '../activities/activity.entity';
+import { PaginatedResult, paginate } from '../common/dto/paginated-result';
 
 export interface ProjectWithProgress extends Project {
   progressPercent: number;
   memberCount: number;
 }
+
+const SORTABLE_COLUMNS = ['id', 'name', 'status', 'startDate', 'endDate', 'createdAt'];
 
 @Injectable()
 export class ProjectsService {
@@ -47,15 +51,47 @@ export class ProjectsService {
     };
   }
 
-  async getAllProjects(status?: string, search?: string): Promise<ProjectWithProgress[]> {
-    const where: any = {};
-    if (status) where.status = status;
-    if (search) where.name = Like(`%${search}%`);
-    const projects = await this.projectRepository.find({
-      where,
-      order: { createdAt: 'DESC' },
-    });
-    return Promise.all(projects.map((p) => this.withProgress(p)));
+  async getAllProjects(
+    query: ListProjectsQueryDto,
+  ): Promise<PaginatedResult<ProjectWithProgress>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const sortBy = SORTABLE_COLUMNS.includes(query.sortBy ?? '')
+      ? query.sortBy
+      : 'createdAt';
+    const sortOrder = query.sortOrder ?? 'DESC';
+
+    // Members is a many-to-many relation: joining it directly while paging
+    // with skip/take would multiply and mis-paginate rows, so pagination is
+    // resolved against bare project rows first, then the page's full
+    // entities (with eager owner/members) are re-fetched by ID.
+    const idQb = this.projectRepository.createQueryBuilder('project');
+
+    if (query.search) {
+      idQb.andWhere(
+        '(project.name ILIKE :search OR project.description ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+    if (query.status) {
+      idQb.andWhere('project.status = :status', { status: query.status });
+    }
+
+    idQb
+      .orderBy(`project.${sortBy}`, sortOrder)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [pageRows, totalItems] = await idQb.getManyAndCount();
+    const ids = pageRows.map((p) => p.id);
+    const projects = ids.length
+      ? await this.projectRepository.find({ where: { id: In(ids) } })
+      : [];
+    const byId = new Map(projects.map((p) => [p.id, p]));
+    const ordered = ids.map((id) => byId.get(id)).filter((p): p is Project => !!p);
+
+    const items = await Promise.all(ordered.map((p) => this.withProgress(p)));
+    return paginate(items, totalItems, page, limit);
   }
 
   async getProjectById(id: number): Promise<ProjectWithProgress> {

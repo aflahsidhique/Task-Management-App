@@ -16,7 +16,9 @@ import { Project } from './project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AddMemberDto } from './dto/add-member.dto';
+import { ListProjectsQueryDto } from './dto/list-projects-query.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/user.entity';
 
@@ -26,11 +28,11 @@ import { User } from '../users/user.entity';
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
-  @ApiOperation({ summary: 'Retrieve all projects' })
-  @ApiResponse({ status: 200, description: 'List of all projects', type: [Project] })
+  @ApiOperation({ summary: 'Retrieve projects (paginated, searchable, filterable)' })
+  @ApiResponse({ status: 200, description: 'Paginated list of projects' })
   @Get()
-  getAllProjects(@Query('status') status?: string, @Query('search') search?: string) {
-    return this.projectsService.getAllProjects(status, search);
+  getAllProjects(@Query() query: ListProjectsQueryDto) {
+    return this.projectsService.getAllProjects(query);
   }
 
   @ApiOperation({ summary: 'Retrieve a project by ID' })
@@ -44,6 +46,7 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Create a new project' })
   @ApiResponse({ status: 201, description: 'Project created successfully', type: Project })
   @Roles('Admin', 'Project Manager')
+  @RequirePermissions('manage_projects')
   @Post()
   createProject(@Body() dto: CreateProjectDto, @CurrentUser() user: User) {
     return this.projectsService.createProject(dto, user.id);
@@ -53,6 +56,7 @@ export class ProjectsController {
   @ApiResponse({ status: 200, description: 'Project updated successfully', type: Project })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @Roles('Admin', 'Project Manager')
+  @RequirePermissions('manage_projects')
   @Put(':id')
   updateProject(
     @Param('id', ParseIntPipe) id: number,
@@ -66,6 +70,7 @@ export class ProjectsController {
   @ApiResponse({ status: 204, description: 'Project deleted successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @Roles('Admin')
+  @RequirePermissions('manage_projects')
   @Delete(':id')
   deleteProject(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.projectsService.deleteProject(id);
@@ -73,6 +78,7 @@ export class ProjectsController {
 
   @ApiOperation({ summary: 'Add a member to a project' })
   @Roles('Admin', 'Project Manager')
+  @RequirePermissions('manage_projects')
   @Post(':id/members')
   addMember(@Param('id', ParseIntPipe) id: number, @Body() dto: AddMemberDto) {
     return this.projectsService.addMember(id, dto.userId);
@@ -80,6 +86,7 @@ export class ProjectsController {
 
   @ApiOperation({ summary: 'Remove a member from a project' })
   @Roles('Admin', 'Project Manager')
+  @RequirePermissions('manage_projects')
   @Delete(':id/members/:userId')
   removeMember(
     @Param('id', ParseIntPipe) id: number,
