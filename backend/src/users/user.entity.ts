@@ -2,6 +2,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -17,6 +18,8 @@ export enum UserStatus {
 }
 
 @Entity()
+// Unique only among non-deleted rows, so a soft-deleted user's email can be reused.
+@Index(['email'], { unique: true, where: '"deletedAt" IS NULL' })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -24,8 +27,7 @@ export class User {
   @Column()
   fullName: string;
 
-  @Index({ unique: true })
-  @Column({ unique: true })
+  @Column()
   email: string;
 
   @Column({ select: false })
@@ -62,4 +64,7 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 }

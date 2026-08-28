@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -22,6 +23,7 @@ export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => User, { eager: false })
   @JoinColumn()
   user: User;
@@ -35,6 +37,7 @@ export class Notification {
   @Column()
   message: string;
 
+  @Index()
   @Column({ default: false })
   isRead: boolean;
 

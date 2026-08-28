@@ -37,7 +37,7 @@ export class RolesService {
   }
 
   async deleteRole(id: number): Promise<void> {
-    const result = await this.roleRepository.delete(id);
+    const result = await this.roleRepository.softDelete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Role with ID ${id} not found`);
     }

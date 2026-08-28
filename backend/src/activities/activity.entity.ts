@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -43,6 +44,7 @@ export class Activity {
   @Column()
   description: string;
 
+  @Index()
   @CreateDateColumn()
   createdAt: Date;
 }

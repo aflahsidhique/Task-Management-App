@@ -2,7 +2,9 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -31,6 +33,7 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Index()
   @Column({ type: 'enum', enum: ProjectStatus, default: ProjectStatus.ON_TRACK })
   status: ProjectStatus;
 
@@ -53,4 +56,7 @@ export class Project {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 }

@@ -2,7 +2,9 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -32,14 +34,19 @@ export class FileAsset {
   @JoinColumn()
   uploadedBy: User;
 
+  @Index()
   @ManyToOne(() => Project, { eager: true, nullable: true, onDelete: 'CASCADE' })
   @JoinColumn()
   project: Project;
 
+  @Index()
   @ManyToOne(() => Task, { eager: true, nullable: true, onDelete: 'CASCADE' })
   @JoinColumn()
   task: Task;
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 }

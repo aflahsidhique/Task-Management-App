@@ -2,17 +2,21 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
+// Unique only among non-deleted rows, so a soft-deleted role's name can be reused.
+@Index(['name'], { unique: true, where: '"deletedAt" IS NULL' })
 export class Role {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column()
   name: string;
 
   @Column({ nullable: true })
@@ -26,4 +30,7 @@ export class Role {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 }

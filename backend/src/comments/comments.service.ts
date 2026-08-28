@@ -128,7 +128,7 @@ export class CommentsService {
     if (!canManage) {
       throw new ForbiddenException('You do not have permission to delete this comment');
     }
-    await this.commentRepository.delete(id);
+    await this.commentRepository.softDelete(id);
 
     const entityType = existing.task ? 'task' : 'project';
     const entityId = existing.task?.id ?? existing.project?.id;

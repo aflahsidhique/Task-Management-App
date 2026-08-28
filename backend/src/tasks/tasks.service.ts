@@ -197,6 +197,6 @@ export class TasksService {
     if (!canManageTask(currentUser, existing)) {
       throw new ForbiddenException('You do not have permission to delete this task');
     }
-    await this.taskRepository.delete(id);
+    await this.taskRepository.softDelete(id);
   }
 }

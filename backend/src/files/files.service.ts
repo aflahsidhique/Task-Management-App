@@ -3,7 +3,6 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
-import * as path from 'path';
 import { FileAsset } from './file-asset.entity';
 import { ActivitiesService } from '../activities/activities.service';
 import { ActivityType } from '../activities/activity.entity';
@@ -72,10 +71,8 @@ export class FilesService {
     if (!isOwner && !canManage) {
       throw new ForbiddenException('You do not have permission to delete this file');
     }
-    const filePath = path.join(UPLOAD_DIR, file.storedFileName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-    await this.fileRepository.delete(id);
+    // Soft delete only: the row disappears from listings but the physical
+    // file is kept on disk so the deletion is recoverable.
+    await this.fileRepository.softDelete(id);
   }
 }
