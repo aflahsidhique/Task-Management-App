@@ -15,6 +15,7 @@ import { Role } from './role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('roles')
 @ApiBearerAuth()
@@ -40,6 +41,7 @@ export class RolesController {
   @ApiOperation({ summary: 'Create a new role' })
   @ApiResponse({ status: 201, description: 'Role created successfully', type: Role })
   @Roles('Admin')
+  @RequirePermissions('manage_roles')
   @Post()
   createRole(@Body() createRoleDto: CreateRoleDto): Promise<Role> {
     return this.rolesService.createRole(createRoleDto);
@@ -49,6 +51,7 @@ export class RolesController {
   @ApiResponse({ status: 200, description: 'Role updated successfully', type: Role })
   @ApiResponse({ status: 404, description: 'Role not found' })
   @Roles('Admin')
+  @RequirePermissions('manage_roles')
   @Put(':id')
   updateRole(
     @Param('id', ParseIntPipe) id: number,
@@ -61,6 +64,7 @@ export class RolesController {
   @ApiResponse({ status: 204, description: 'Role deleted successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
   @Roles('Admin')
+  @RequirePermissions('manage_roles')
   @Delete(':id')
   deleteRole(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.rolesService.deleteRole(id);

@@ -40,6 +40,43 @@ export class UsersService {
       .getOne();
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
+  async findByIdWithRefreshToken(id: number): Promise<User | null> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.refreshTokenHash')
+      .leftJoinAndSelect('user.role', 'role')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
+  async findByValidPasswordResetHash(hash: string): Promise<User | null> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .where('user.passwordResetTokenHash = :hash', { hash })
+      .andWhere('user.passwordResetExpiresAt > :now', { now: new Date() })
+      .getOne();
+  }
+
+  async setRefreshTokenHash(id: number, refreshTokenHash: string | null): Promise<void> {
+    await this.userRepository.update(id, { refreshTokenHash });
+  }
+
+  async setPasswordResetToken(
+    id: number,
+    passwordResetTokenHash: string | null,
+    passwordResetExpiresAt: Date | null,
+  ): Promise<void> {
+    await this.userRepository.update(id, {
+      passwordResetTokenHash,
+      passwordResetExpiresAt,
+    });
+  }
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existing = await this.userRepository.findOne({
       where: { email: createUserDto.email },
