@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -39,6 +40,9 @@ export class FilesController {
     @Body('projectId') projectId?: string,
     @Body('taskId') taskId?: string,
   ) {
+    if (!file) {
+      throw new BadRequestException('No file was uploaded');
+    }
     return this.filesService.saveUploadedFile(
       file,
       user.id,
