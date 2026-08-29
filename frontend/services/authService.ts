@@ -6,7 +6,7 @@ export interface AuthUser {
   email: string;
   jobTitle: string | null;
   avatarUrl: string | null;
-  role: { id: number; name: string } | null;
+  role: { id: number; name: string; permissions: string[] } | null;
 }
 
 export interface LoginResponse {

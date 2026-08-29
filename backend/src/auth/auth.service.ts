@@ -152,7 +152,9 @@ export class AuthService {
       email: user.email,
       jobTitle: user.jobTitle,
       avatarUrl: user.avatarUrl,
-      role: user.role ? { id: user.role.id, name: user.role.name } : null,
+      role: user.role
+        ? { id: user.role.id, name: user.role.name, permissions: user.role.permissions }
+        : null,
     };
   }
 

@@ -6,6 +6,7 @@ import { FaPlus } from 'react-icons/fa';
 import { ListProjectsParams } from '../../../services/projectService';
 import { useProjectsQuery } from '../../../hooks/useProjects';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
+import { useAuth } from '../../../context/AuthContext';
 import PageHeader from '../../../components/layout/PageHeader';
 import Card from '../../../components/ui/Card';
 import Badge, { statusLabel, statusToVariant } from '../../../components/ui/Badge';
@@ -18,6 +19,8 @@ const PROJECTS_PER_PAGE = 9;
 const STATUS_OPTIONS = ['ON_TRACK', 'AT_RISK', 'DELAYED', 'COMPLETED', 'ON_HOLD'] as const;
 
 export default function ProjectsPage() {
+  const { hasPermission } = useAuth();
+  const canManageProjects = hasPermission('manage_projects');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -42,12 +45,14 @@ export default function ProjectsPage() {
       <PageHeader
         title="Projects"
         right={
-          <Link
-            href="/projects/new"
-            className="inline-flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:bg-primary-700"
-          >
-            <FaPlus /> New Project
-          </Link>
+          canManageProjects && (
+            <Link
+              href="/projects/new"
+              className="inline-flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:bg-primary-700"
+            >
+              <FaPlus /> New Project
+            </Link>
+          )
         }
       />
 

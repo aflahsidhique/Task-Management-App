@@ -12,8 +12,8 @@ import LoadingDots from '../../../components/ui/LoadingDots';
 import { useAuth } from '../../../context/AuthContext';
 
 export default function RolesPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.role?.name === 'Admin';
+  const { hasPermission } = useAuth();
+  const isAdmin = hasPermission('manage_roles');
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
 

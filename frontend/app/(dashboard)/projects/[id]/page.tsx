@@ -11,9 +11,12 @@ import Badge, { statusLabel, statusToVariant } from '../../../../components/ui/B
 import ProgressBar from '../../../../components/ui/ProgressBar';
 import AvatarGroup from '../../../../components/ui/AvatarGroup';
 import LoadingDots from '../../../../components/ui/LoadingDots';
+import { useAuth } from '../../../../context/AuthContext';
 
 export default function ProjectDetailPage() {
   const { id } = useParams() as { id: string };
+  const { hasPermission } = useAuth();
+  const canManageProjects = hasPermission('manage_projects');
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,12 +52,14 @@ export default function ProjectDetailPage() {
         title={project.name}
         extra={<Badge variant={statusToVariant(project.status)}>{statusLabel(project.status)}</Badge>}
         right={
-          <Link
-            href={`/projects/${project.id}/edit`}
-            className="bg-white border border-gray-200 text-sm px-4 py-2 rounded-lg hover:bg-gray-50"
-          >
-            Edit Project
-          </Link>
+          canManageProjects && (
+            <Link
+              href={`/projects/${project.id}/edit`}
+              className="bg-white border border-gray-200 text-sm px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
+              Edit Project
+            </Link>
+          )
         }
       />
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">

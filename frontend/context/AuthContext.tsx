@@ -9,6 +9,11 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  /** Mirrors the backend's PermissionsGuard: checks the current user's
+   * Role.permissions array. */
+  hasPermission: (permission: string) => boolean;
+  /** Mirrors the backend's RolesGuard: Super Admin always passes. */
+  hasRole: (...roleNames: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -47,8 +52,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = '/login';
   }, []);
 
+  const hasRole = useCallback(
+    (...roleNames: string[]) => {
+      const name = user?.role?.name;
+      if (!name) return false;
+      return name === 'Super Admin' || roleNames.includes(name);
+    },
+    [user],
+  );
+
+  const hasPermission = useCallback(
+    (permission: string) => {
+      if (hasRole('Super Admin')) return true;
+      return !!user?.role?.permissions?.includes(permission);
+    },
+    [user, hasRole],
+  );
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, hasPermission, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

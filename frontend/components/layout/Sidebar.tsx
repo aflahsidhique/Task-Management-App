@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '../../store/uiStore';
+import { useAuth } from '../../context/AuthContext';
 import {
   FaBell,
   FaCalendarAlt,
@@ -17,14 +18,24 @@ import {
   FaUsers,
 } from 'react-icons/fa';
 
-const navItems = [
+const navItems: {
+  href: string;
+  label: string;
+  icon: typeof FaChartBar;
+  requiredPermission?: string;
+}[] = [
   { href: '/dashboard', label: 'Dashboard', icon: FaChartBar },
   { href: '/projects', label: 'Projects', icon: FaFolderOpen },
   { href: '/tasks', label: 'Tasks', icon: FaTasks },
   { href: '/calendar', label: 'Calendar', icon: FaCalendarAlt },
-  { href: '/reports', label: 'Reports', icon: FaChartBar },
-  { href: '/users', label: 'Users', icon: FaUsers },
-  { href: '/roles', label: 'Roles & Permissions', icon: FaUserShield },
+  { href: '/reports', label: 'Reports', icon: FaChartBar, requiredPermission: 'view_reports' },
+  { href: '/users', label: 'Users', icon: FaUsers, requiredPermission: 'manage_users' },
+  {
+    href: '/roles',
+    label: 'Roles & Permissions',
+    icon: FaUserShield,
+    requiredPermission: 'manage_roles',
+  },
   { href: '/notifications', label: 'Notifications', icon: FaBell },
   { href: '/files', label: 'Files', icon: FaFolder },
   { href: '/settings', label: 'Settings', icon: FaCog },
@@ -34,6 +45,14 @@ const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const collapsed = useUIStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const { hasPermission } = useAuth();
+
+  // Dynamic menu: an item only appears when the current user's role
+  // (admin-configurable via Role.permissions) grants the permission it
+  // requires — items with no requiredPermission are open to everyone.
+  const visibleNavItems = navItems.filter(
+    (item) => !item.requiredPermission || hasPermission(item.requiredPermission),
+  );
 
   return (
     <aside
@@ -49,7 +68,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       <nav className="flex-1 px-3 space-y-1 items-start overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {visibleNavItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link

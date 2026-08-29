@@ -18,8 +18,8 @@ import { useAuth } from '../../../context/AuthContext';
 const USERS_PER_PAGE = 10;
 
 export default function UsersPage() {
-  const { user: currentUser } = useAuth();
-  const isAdmin = currentUser?.role?.name === 'Admin' || currentUser?.role?.name === 'Super Admin';
+  const { hasPermission } = useAuth();
+  const isAdmin = hasPermission('manage_users');
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
