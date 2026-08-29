@@ -10,8 +10,9 @@ import {
 } from 'react-icons/fa';
 import DashboardService, { DashboardSummary } from '../../../services/dashboardService';
 import PageHeader from '../../../components/layout/PageHeader';
-import LoadingDots from '../../../components/ui/LoadingDots';
+import { SkeletonCard, SkeletonTable, Skeleton } from '../../../components/ui/Skeleton';
 import Card from '../../../components/ui/Card';
+import ChartErrorBoundary from '../../../components/ui/ChartErrorBoundary';
 import StatCard from '../../../components/ui/StatCard';
 import DateRangePicker from '../../../components/ui/DateRangePicker';
 import TeamMembersCard from '../../../components/dashboard/TeamMembersCard';
@@ -35,19 +36,41 @@ export default function DashboardPage() {
   const [range, setRange] = useState(defaultRange());
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     DashboardService.getSummary(range.from, range.to)
       .then(setSummary)
-      .catch((err) => console.error('Failed to load dashboard summary:', err))
+      .catch((err) => {
+        console.error('Failed to load dashboard summary:', err);
+        setError('Failed to load the dashboard. Please try again.');
+      })
       .finally(() => setLoading(false));
   }, [range.from, range.to]);
 
-  if (loading || !summary) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <LoadingDots />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-9 w-64" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+        <SkeletonTable rows={5} columns={4} />
+      </div>
+    );
+  }
+
+  if (error || !summary) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-2 text-center">
+        <p className="text-sm text-danger">{error || 'No dashboard data available.'}</p>
       </div>
     );
   }
@@ -110,13 +133,19 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
         <Card title="Project Progress">
-          <DonutChart data={summary.projectProgress} />
+          <ChartErrorBoundary>
+            <DonutChart data={summary.projectProgress} />
+          </ChartErrorBoundary>
         </Card>
         <Card title="Tasks Overview" className="xl:col-span-1">
-          <TasksOverviewChart data={summary.tasksOverview} />
+          <ChartErrorBoundary>
+            <TasksOverviewChart data={summary.tasksOverview} />
+          </ChartErrorBoundary>
         </Card>
         <Card title="Task Status">
-          <DonutChart data={summary.taskStatus} />
+          <ChartErrorBoundary>
+            <DonutChart data={summary.taskStatus} />
+          </ChartErrorBoundary>
         </Card>
       </div>
 
