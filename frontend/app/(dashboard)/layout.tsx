@@ -10,14 +10,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface">
+      <div className="flex items-center justify-center min-h-screen bg-surface dark:bg-slate-900">
         <LoadingDots />
       </div>
     );
   }
 
   return (
-    <div className="flex bg-surface min-h-screen">
+    <div className="flex bg-surface dark:bg-slate-900 min-h-screen">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
