@@ -7,11 +7,23 @@ import Avatar from '../ui/Avatar';
 interface TaskItemProps {
   task: Task;
   handleDelete: (id: number) => void;
+  selected?: boolean;
+  onToggleSelect?: (id: number) => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, handleDelete }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task, handleDelete, selected, onToggleSelect }) => {
   return (
     <tr className="border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+      {onToggleSelect && (
+        <td className="px-5 py-4">
+          <input
+            type="checkbox"
+            checked={!!selected}
+            onChange={() => onToggleSelect(task.id)}
+            aria-label={`Select ${task.title}`}
+          />
+        </td>
+      )}
       <td className="px-5 py-4 text-sm font-medium">
         <Link
           href={`/tasks/${task.id}`}

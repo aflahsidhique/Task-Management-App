@@ -22,6 +22,15 @@ export function useTasksQuery(filters: TaskFilters) {
   });
 }
 
+/** Unpaginated task list for views that need the whole matching set at
+ * once (the Kanban board groups by status client-side). */
+export function useAllTasksQuery(filters: Omit<TaskFilters, 'page' | 'limit'>) {
+  return useQuery({
+    queryKey: [...taskKeys.all, 'board', filters],
+    queryFn: () => TaskService.getTasks(filters),
+  });
+}
+
 export function useTaskQuery(id: number) {
   return useQuery({
     queryKey: taskKeys.detail(id),
