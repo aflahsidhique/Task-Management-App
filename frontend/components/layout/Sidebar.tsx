@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useUIStore } from '../../store/uiStore';
 import {
   FaBell,
   FaCalendarAlt,
@@ -32,7 +32,8 @@ const navItems = [
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = useUIStore((state) => state.sidebarCollapsed);
+  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
 
   return (
     <aside
@@ -47,14 +48,14 @@ const Sidebar: React.FC = () => {
         {!collapsed && <span className="text-white font-semibold text-lg">SNEC</span>}
       </div>
 
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-1 items-start overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+              className={`flex items-start gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                 isActive
                   ? 'bg-sidebar-active text-white'
                   : 'text-gray-400 hover:bg-sidebar-hover hover:text-white'
@@ -68,7 +69,7 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <button
-        onClick={() => setCollapsed((c) => !c)}
+        onClick={toggleSidebar}
         className="flex items-center gap-2 px-5 py-4 text-gray-400 hover:text-white text-sm border-t border-white/10"
       >
         {collapsed ? <FaChevronRight /> : <FaChevronLeft />}

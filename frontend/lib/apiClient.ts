@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuthTokens, getAccessToken, getRefreshToken, setAuthTokens } from './authStorage';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
@@ -7,30 +8,65 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = window.localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
+function redirectToLogin() {
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+}
+
+// Multiple requests can 401 around the same time (e.g. a page firing
+// several queries at once); only one refresh call should ever be in
+// flight, and every pending request waits on that same promise.
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+  const response = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
+  const { accessToken, refreshToken: nextRefreshToken } = response.data.data;
+  setAuthTokens(accessToken, nextRefreshToken);
+  return accessToken;
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (
-      typeof window !== 'undefined' &&
-      axios.isAxiosError(error) &&
-      error.response?.status === 401
-    ) {
-      window.localStorage.removeItem('accessToken');
-      document.cookie = 'token=; path=/; max-age=0';
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+  async (error) => {
+    if (typeof window === 'undefined' || !axios.isAxiosError(error) || error.response?.status !== 401) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login')
+      || originalRequest?.url?.includes('/auth/refresh');
+
+    if (!originalRequest || originalRequest._retry || isAuthEndpoint) {
+      clearAuthTokens();
+      redirectToLogin();
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+    try {
+      refreshPromise ||= refreshAccessToken().finally(() => {
+        refreshPromise = null;
+      });
+      const newAccessToken = await refreshPromise;
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      clearAuthTokens();
+      redirectToLogin();
+      return Promise.reject(refreshError);
+    }
   },
 );
 

@@ -1,8 +1,8 @@
 'use client';
 
-import Cookies from 'js-cookie';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import AuthService, { AuthUser } from '../services/authService';
+import { clearAuthTokens, getAccessToken, setAuthTokens } from '../lib/authStorage';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -18,30 +18,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = window.localStorage.getItem('accessToken');
-    if (!token) {
+    if (!getAccessToken()) {
       setIsLoading(false);
       return;
     }
     AuthService.me()
       .then(setUser)
-      .catch(() => {
-        window.localStorage.removeItem('accessToken');
-        Cookies.remove('token');
-      })
+      .catch(() => clearAuthTokens())
       .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { accessToken, user: loggedInUser } = await AuthService.login(email, password);
-    window.localStorage.setItem('accessToken', accessToken);
-    Cookies.set('token', accessToken, { expires: 1 });
+    const { accessToken, refreshToken, user: loggedInUser } = await AuthService.login(
+      email,
+      password,
+    );
+    setAuthTokens(accessToken, refreshToken);
     setUser(loggedInUser);
   }, []);
 
   const logout = useCallback(() => {
-    window.localStorage.removeItem('accessToken');
-    Cookies.remove('token');
+    AuthService.logout().catch(() => {
+      // Best-effort server-side revocation; the client-side token clear
+      // below is what actually ends the session either way.
+    });
+    clearAuthTokens();
     setUser(null);
     window.location.href = '/login';
   }, []);
