@@ -1,6 +1,18 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Delete, Get, Param, ParseIntPipe, Put } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Put,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { Notification } from './notification.entity';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -13,13 +25,19 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @ApiOperation({ summary: "Retrieve the current user's notifications" })
-  @ApiResponse({ status: 200, description: 'List of notifications', type: [Notification] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of notifications',
+    type: [Notification],
+  })
   @Get()
   getMyNotifications(@CurrentUser() user: User): Promise<Notification[]> {
     return this.notificationsService.findForUser(user.id);
   }
 
-  @ApiOperation({ summary: "Retrieve the current user's unread notification count" })
+  @ApiOperation({
+    summary: "Retrieve the current user's unread notification count",
+  })
   @Get('unread-count')
   async getUnreadCount(@CurrentUser() user: User): Promise<{ count: number }> {
     const count = await this.notificationsService.unreadCount(user.id);

@@ -1,5 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
@@ -69,7 +73,9 @@ export class FilesService {
     const isOwner = file.uploadedBy?.id === currentUser.id;
     const canManage = MANAGE_ROLES.includes(currentUser.role?.name);
     if (!isOwner && !canManage) {
-      throw new ForbiddenException('You do not have permission to delete this file');
+      throw new ForbiddenException(
+        'You do not have permission to delete this file',
+      );
     }
     // Soft delete only: the row disappears from listings but the physical
     // file is kept on disk so the deletion is recoverable.

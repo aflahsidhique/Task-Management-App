@@ -15,12 +15,18 @@ export class CreateCommentDto {
   @IsNotEmpty()
   content: string;
 
-  @ApiProperty({ description: 'ID of the task this comment belongs to', required: false })
+  @ApiProperty({
+    description: 'ID of the task this comment belongs to',
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   taskId?: number;
 
-  @ApiProperty({ description: 'ID of the project this comment belongs to', required: false })
+  @ApiProperty({
+    description: 'ID of the project this comment belongs to',
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   projectId?: number;

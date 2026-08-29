@@ -34,7 +34,11 @@ export class Project {
   description: string;
 
   @Index()
-  @Column({ type: 'enum', enum: ProjectStatus, default: ProjectStatus.ON_TRACK })
+  @Column({
+    type: 'enum',
+    enum: ProjectStatus,
+    default: ProjectStatus.ON_TRACK,
+  })
   status: ProjectStatus;
 
   @Column({ type: 'date' })

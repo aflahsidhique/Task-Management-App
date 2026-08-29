@@ -31,7 +31,9 @@ describe('ProjectsService', () => {
     }).compile();
 
     service = module.get<ProjectsService>(ProjectsService);
-    projectRepository = module.get<Repository<Project>>(getRepositoryToken(Project));
+    projectRepository = module.get<Repository<Project>>(
+      getRepositoryToken(Project),
+    );
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
     taskRepository = module.get<Repository<Task>>(getRepositoryToken(Task));
 
@@ -49,7 +51,9 @@ describe('ProjectsService', () => {
         orderBy: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        getManyAndCount: jest.fn().mockResolvedValue([[{ id: 2 }, { id: 1 }], 2]),
+        getManyAndCount: jest
+          .fn()
+          .mockResolvedValue([[{ id: 2 }, { id: 1 }], 2]),
       };
       jest.spyOn(projectRepository, 'createQueryBuilder').mockReturnValue(idQb);
       jest
@@ -127,7 +131,9 @@ describe('ProjectsService', () => {
 
   describe('deleteProject', () => {
     it('throws NotFoundException when nothing was deleted', async () => {
-      jest.spyOn(projectRepository, 'softDelete').mockResolvedValue({ affected: 0 } as any);
+      jest
+        .spyOn(projectRepository, 'softDelete')
+        .mockResolvedValue({ affected: 0 } as any);
 
       await expect(service.deleteProject(1)).rejects.toThrow(NotFoundException);
     });
@@ -160,7 +166,9 @@ describe('ProjectsService', () => {
       const members = [{ id: 2 } as User, { id: 3 } as User];
       const project = { id: 1, members } as Project;
       jest.spyOn(projectRepository, 'findOne').mockResolvedValue(project);
-      const saveSpy = jest.spyOn(projectRepository, 'save').mockResolvedValue(project);
+      const saveSpy = jest
+        .spyOn(projectRepository, 'save')
+        .mockResolvedValue(project);
 
       await service.removeMember(1, 2);
 

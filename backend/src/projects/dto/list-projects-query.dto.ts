@@ -5,7 +5,10 @@ import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ProjectStatus } from '../project.entity';
 
 export class ListProjectsQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by project status', enum: ProjectStatus })
+  @ApiPropertyOptional({
+    description: 'Filter by project status',
+    enum: ProjectStatus,
+  })
   @IsOptional()
   @IsEnum(ProjectStatus)
   status?: ProjectStatus;

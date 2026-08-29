@@ -18,12 +18,20 @@ export class CreateTaskDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ description: 'Status of the task', enum: TaskStatus, required: false })
+  @ApiProperty({
+    description: 'Status of the task',
+    enum: TaskStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
-  @ApiProperty({ description: 'Priority of the task', enum: TaskPriority, required: false })
+  @ApiProperty({
+    description: 'Priority of the task',
+    enum: TaskPriority,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
@@ -33,22 +41,34 @@ export class CreateTaskDto {
   @IsDateString()
   dueDate?: string;
 
-  @ApiProperty({ description: 'ID of the project this task belongs to', required: false })
+  @ApiProperty({
+    description: 'ID of the project this task belongs to',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   projectId?: number;
 
-  @ApiProperty({ description: 'ID of the user this task is assigned to', required: false })
+  @ApiProperty({
+    description: 'ID of the user this task is assigned to',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   assigneeId?: number;
 
-  @ApiProperty({ description: 'Estimated hours to complete the task', required: false })
+  @ApiProperty({
+    description: 'Estimated hours to complete the task',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   estimatedHours?: number;
 
-  @ApiProperty({ description: 'Actual hours spent on the task', required: false })
+  @ApiProperty({
+    description: 'Actual hours spent on the task',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   actualHours?: number;

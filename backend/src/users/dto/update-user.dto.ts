@@ -35,7 +35,10 @@ export class UpdateUserDto {
   @IsString()
   mobile?: string;
 
-  @ApiProperty({ description: 'ID of the role assigned to the user', required: false })
+  @ApiProperty({
+    description: 'ID of the role assigned to the user',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   roleId?: number;

@@ -6,7 +6,10 @@ import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { UserStatus } from '../user.entity';
 
 export class ListUsersQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by account status', enum: UserStatus })
+  @ApiPropertyOptional({
+    description: 'Filter by account status',
+    enum: UserStatus,
+  })
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;

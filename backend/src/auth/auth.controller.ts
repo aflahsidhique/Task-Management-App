@@ -1,6 +1,11 @@
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Get, Post, Put } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -43,7 +48,10 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Request a password reset link (mock email)' })
-  @ApiResponse({ status: 200, description: 'Reset link sent if the account exists' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset link sent if the account exists',
+  })
   @Public()
   @Post('forgot-password')
   forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -52,10 +60,15 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Reset the password using a reset token' })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
-  @ApiResponse({ status: 400, description: 'Reset link is invalid or has expired' })
+  @ApiResponse({
+    status: 400,
+    description: 'Reset link is invalid or has expired',
+  })
   @Public()
   @Post('reset-password')
-  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
     await this.authService.resetPassword(dto.token, dto.password);
     return { message: 'Password has been reset' };
   }

@@ -34,6 +34,8 @@ export class MailService {
       from: 'no-reply@snec-taskmanager.local',
       ...message,
     });
-    this.logger.log(`Mock email -> ${message.to}: "${message.subject}" ${info.messageId}`);
+    this.logger.log(
+      `Mock email -> ${message.to}: "${message.subject}" ${info.messageId}`,
+    );
   }
 }

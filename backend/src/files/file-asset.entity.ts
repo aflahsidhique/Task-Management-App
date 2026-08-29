@@ -35,7 +35,11 @@ export class FileAsset {
   uploadedBy: User;
 
   @Index()
-  @ManyToOne(() => Project, { eager: true, nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Project, {
+    eager: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   project: Project;
 

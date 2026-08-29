@@ -17,7 +17,14 @@ export interface ProjectWithProgress extends Project {
   memberCount: number;
 }
 
-const SORTABLE_COLUMNS = ['id', 'name', 'status', 'startDate', 'endDate', 'createdAt'];
+const SORTABLE_COLUMNS = [
+  'id',
+  'name',
+  'status',
+  'startDate',
+  'endDate',
+  'createdAt',
+];
 
 @Injectable()
 export class ProjectsService {
@@ -88,7 +95,9 @@ export class ProjectsService {
       ? await this.projectRepository.find({ where: { id: In(ids) } })
       : [];
     const byId = new Map(projects.map((p) => [p.id, p]));
-    const ordered = ids.map((id) => byId.get(id)).filter((p): p is Project => !!p);
+    const ordered = ids
+      .map((id) => byId.get(id))
+      .filter((p): p is Project => !!p);
 
     const items = await Promise.all(ordered.map((p) => this.withProgress(p)));
     return paginate(items, totalItems, page, limit);
@@ -102,8 +111,13 @@ export class ProjectsService {
     return this.withProgress(project);
   }
 
-  async createProject(dto: CreateProjectDto, currentUserId: number): Promise<ProjectWithProgress> {
-    const owner = await this.userRepository.findOne({ where: { id: dto.ownerId } });
+  async createProject(
+    dto: CreateProjectDto,
+    currentUserId: number,
+  ): Promise<ProjectWithProgress> {
+    const owner = await this.userRepository.findOne({
+      where: { id: dto.ownerId },
+    });
     if (!owner) {
       throw new NotFoundException(`User with ID ${dto.ownerId} not found`);
     }
@@ -141,7 +155,9 @@ export class ProjectsService {
     }
     const { ownerId, memberIds, ...rest } = dto;
     if (ownerId) {
-      const owner = await this.userRepository.findOne({ where: { id: ownerId } });
+      const owner = await this.userRepository.findOne({
+        where: { id: ownerId },
+      });
       if (!owner) {
         throw new NotFoundException(`User with ID ${ownerId} not found`);
       }
@@ -171,8 +187,13 @@ export class ProjectsService {
     }
   }
 
-  async addMember(projectId: number, userId: number): Promise<ProjectWithProgress> {
-    const project = await this.projectRepository.findOne({ where: { id: projectId } });
+  async addMember(
+    projectId: number,
+    userId: number,
+  ): Promise<ProjectWithProgress> {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
     if (!project) {
       throw new NotFoundException(`Project with ID ${projectId} not found`);
     }
@@ -187,8 +208,13 @@ export class ProjectsService {
     return this.withProgress(project);
   }
 
-  async removeMember(projectId: number, userId: number): Promise<ProjectWithProgress> {
-    const project = await this.projectRepository.findOne({ where: { id: projectId } });
+  async removeMember(
+    projectId: number,
+    userId: number,
+  ): Promise<ProjectWithProgress> {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
     if (!project) {
       throw new NotFoundException(`Project with ID ${projectId} not found`);
     }

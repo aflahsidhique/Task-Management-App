@@ -31,7 +31,9 @@ describe('CommentsService', () => {
     }).compile();
 
     service = module.get<CommentsService>(CommentsService);
-    commentRepository = module.get<Repository<Comment>>(getRepositoryToken(Comment));
+    commentRepository = module.get<Repository<Comment>>(
+      getRepositoryToken(Comment),
+    );
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
   });
 
@@ -41,9 +43,9 @@ describe('CommentsService', () => {
 
   describe('create', () => {
     it('rejects a comment with neither taskId nor projectId', async () => {
-      await expect(
-        service.create({ content: 'hi' } as any, 1),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create({ content: 'hi' } as any, 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('rejects a comment with both taskId and projectId', async () => {
@@ -56,8 +58,12 @@ describe('CommentsService', () => {
       const author = { id: 1, fullName: 'Author' } as User;
       const mentioned = { id: 2 } as User;
       jest.spyOn(userRepository, 'find').mockResolvedValue([author, mentioned]);
-      jest.spyOn(commentRepository, 'create').mockReturnValue({ id: 10 } as Comment);
-      jest.spyOn(commentRepository, 'save').mockResolvedValue({ id: 10 } as Comment);
+      jest
+        .spyOn(commentRepository, 'create')
+        .mockReturnValue({ id: 10 } as Comment);
+      jest
+        .spyOn(commentRepository, 'save')
+        .mockResolvedValue({ id: 10 } as Comment);
       jest.spyOn(commentRepository, 'findOne').mockResolvedValue({
         id: 10,
         content: 'hi @author @mentioned',
@@ -68,7 +74,11 @@ describe('CommentsService', () => {
       } as Comment);
 
       await service.create(
-        { content: 'hi @author @mentioned', taskId: 5, mentionedUserIds: [1, 2] } as any,
+        {
+          content: 'hi @author @mentioned',
+          taskId: 5,
+          mentionedUserIds: [1, 2],
+        } as any,
         1,
       );
 
@@ -109,9 +119,15 @@ describe('CommentsService', () => {
           task: null,
           project: { id: 3 } as any,
         } as Comment);
-      const saveSpy = jest.spyOn(commentRepository, 'save').mockResolvedValue({} as any);
+      const saveSpy = jest
+        .spyOn(commentRepository, 'save')
+        .mockResolvedValue({} as any);
 
-      const result = await service.update(10, { content: 'edited' } as any, author);
+      const result = await service.update(
+        10,
+        { content: 'edited' } as any,
+        author,
+      );
 
       expect(saveSpy).toHaveBeenCalledWith(
         expect.objectContaining({ id: 10, content: 'edited' }),
@@ -129,7 +145,9 @@ describe('CommentsService', () => {
         task: { id: 5 } as any,
         project: null,
       } as Comment);
-      const softDeleteSpy = jest.spyOn(commentRepository, 'softDelete').mockResolvedValue({} as any);
+      const softDeleteSpy = jest
+        .spyOn(commentRepository, 'softDelete')
+        .mockResolvedValue({} as any);
 
       await service.remove(10, author);
 
@@ -158,7 +176,9 @@ describe('CommentsService', () => {
       } as Comment);
       const outsider = { id: 2, role: { name: 'Developer' } } as User;
 
-      await expect(service.remove(10, outsider)).rejects.toThrow(ForbiddenException);
+      await expect(service.remove(10, outsider)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 });

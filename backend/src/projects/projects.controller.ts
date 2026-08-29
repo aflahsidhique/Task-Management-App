@@ -10,7 +10,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { Project } from './project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -28,7 +33,9 @@ import { User } from '../users/user.entity';
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
-  @ApiOperation({ summary: 'Retrieve projects (paginated, searchable, filterable)' })
+  @ApiOperation({
+    summary: 'Retrieve projects (paginated, searchable, filterable)',
+  })
   @ApiResponse({ status: 200, description: 'Paginated list of projects' })
   @Get()
   getAllProjects(@Query() query: ListProjectsQueryDto) {
@@ -44,7 +51,11 @@ export class ProjectsController {
   }
 
   @ApiOperation({ summary: 'Create a new project' })
-  @ApiResponse({ status: 201, description: 'Project created successfully', type: Project })
+  @ApiResponse({
+    status: 201,
+    description: 'Project created successfully',
+    type: Project,
+  })
   @Roles('Admin', 'Project Manager')
   @RequirePermissions('manage_projects')
   @Post()
@@ -53,7 +64,11 @@ export class ProjectsController {
   }
 
   @ApiOperation({ summary: 'Update a project by ID' })
-  @ApiResponse({ status: 200, description: 'Project updated successfully', type: Project })
+  @ApiResponse({
+    status: 200,
+    description: 'Project updated successfully',
+    type: Project,
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @Roles('Admin', 'Project Manager')
   @RequirePermissions('manage_projects')

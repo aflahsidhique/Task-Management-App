@@ -17,7 +17,12 @@ import { CreateTaskDto } from './create-task.dto';
 import { UpdateTaskDto } from './update-task.dto';
 import { ListTasksQueryDto } from './dto/list-tasks-query.dto';
 import { BulkUpdateTasksDto } from './dto/bulk-update-tasks.dto';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { User } from '../users/user.entity';
@@ -28,7 +33,9 @@ import { User } from '../users/user.entity';
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @ApiOperation({ summary: 'Retrieve tasks (paginated, searchable, filterable)' })
+  @ApiOperation({
+    summary: 'Retrieve tasks (paginated, searchable, filterable)',
+  })
   @ApiResponse({ status: 200, description: 'Paginated list of tasks' })
   @Get()
   getAllTasks(@Query() query: ListTasksQueryDto, @CurrentUser() user?: User) {
@@ -36,7 +43,11 @@ export class TasksController {
   }
 
   @ApiOperation({ summary: 'Update multiple tasks at once' })
-  @ApiResponse({ status: 200, description: 'Tasks updated successfully', type: [Task] })
+  @ApiResponse({
+    status: 200,
+    description: 'Tasks updated successfully',
+    type: [Task],
+  })
   @RequirePermissions('manage_tasks')
   @Patch('bulk')
   bulkUpdateTasks(
@@ -55,14 +66,25 @@ export class TasksController {
   }
 
   @ApiOperation({ summary: 'Create a new task' })
-  @ApiResponse({ status: 201, description: 'Task created successfully', type: Task })
+  @ApiResponse({
+    status: 201,
+    description: 'Task created successfully',
+    type: Task,
+  })
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto, @CurrentUser() user: User): Promise<Task> {
+  createTask(
+    @Body() createTaskDto: CreateTaskDto,
+    @CurrentUser() user: User,
+  ): Promise<Task> {
     return this.tasksService.createTask(createTaskDto, user.id);
   }
 
   @ApiOperation({ summary: 'Update a task by ID' })
-  @ApiResponse({ status: 200, description: 'Task updated successfully', type: Task })
+  @ApiResponse({
+    status: 200,
+    description: 'Task updated successfully',
+    type: Task,
+  })
   @ApiResponse({ status: 404, description: 'Task not found' })
   @Put(':id')
   updateTask(

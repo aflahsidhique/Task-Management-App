@@ -13,7 +13,10 @@ export class CreateRoleDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Permissions granted to this role', type: [String] })
+  @ApiProperty({
+    description: 'Permissions granted to this role',
+    type: [String],
+  })
   @IsArray()
   @IsString({ each: true })
   permissions: string[];

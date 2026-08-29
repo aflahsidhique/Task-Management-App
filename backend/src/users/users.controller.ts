@@ -11,7 +11,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { User, UserStatus } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,10 +32,14 @@ import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Retrieve users (paginated, searchable, filterable)' })
+  @ApiOperation({
+    summary: 'Retrieve users (paginated, searchable, filterable)',
+  })
   @ApiResponse({ status: 200, description: 'Paginated list of users' })
   @Get()
-  getAllUsers(@Query() query: ListUsersQueryDto): Promise<PaginatedResult<User>> {
+  getAllUsers(
+    @Query() query: ListUsersQueryDto,
+  ): Promise<PaginatedResult<User>> {
     return this.usersService.findAll(query);
   }
 
@@ -43,7 +52,11 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully', type: User })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    type: User,
+  })
   @Roles('Admin')
   @RequirePermissions('manage_users')
   @Post()
@@ -52,7 +65,11 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Update a user by ID' })
-  @ApiResponse({ status: 200, description: 'User updated successfully', type: User })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    type: User,
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Roles('Admin')
   @RequirePermissions('manage_users')

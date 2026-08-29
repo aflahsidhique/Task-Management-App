@@ -1,5 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Task, TaskStatus } from './task.entity';
@@ -15,7 +19,14 @@ import { User } from '../users/user.entity';
 import { PaginatedResult, paginate } from '../common/dto/paginated-result';
 
 const MANAGE_ROLES = ['Super Admin', 'Admin', 'Project Manager'];
-const SORTABLE_COLUMNS = ['id', 'title', 'status', 'priority', 'dueDate', 'createdAt'];
+const SORTABLE_COLUMNS = [
+  'id',
+  'title',
+  'status',
+  'priority',
+  'dueDate',
+  'createdAt',
+];
 
 function canManageTask(user: User, task: Task): boolean {
   if (MANAGE_ROLES.includes(user.role?.name)) {
@@ -51,9 +62,12 @@ export class TasksService {
       .leftJoinAndSelect('task.reporter', 'reporter');
 
     if (query.search) {
-      qb.andWhere('(task.title ILIKE :search OR task.description ILIKE :search)', {
-        search: `%${query.search}%`,
-      });
+      qb.andWhere(
+        '(task.title ILIKE :search OR task.description ILIKE :search)',
+        {
+          search: `%${query.search}%`,
+        },
+      );
     }
     if (query.projectId) {
       qb.andWhere('project.id = :projectId', { projectId: query.projectId });
@@ -67,7 +81,9 @@ export class TasksService {
     if (query.mine && currentUserId) {
       qb.andWhere('assignee.id = :mineId', { mineId: currentUserId });
     } else if (query.assigneeId) {
-      qb.andWhere('assignee.id = :assigneeId', { assigneeId: query.assigneeId });
+      qb.andWhere('assignee.id = :assigneeId', {
+        assigneeId: query.assigneeId,
+      });
     }
 
     qb.orderBy(`task.${sortBy}`, sortOrder)
@@ -117,10 +133,16 @@ export class TasksService {
     return full;
   }
 
-  async updateTask(id: number, dto: UpdateTaskDto, currentUser: User): Promise<Task> {
+  async updateTask(
+    id: number,
+    dto: UpdateTaskDto,
+    currentUser: User,
+  ): Promise<Task> {
     const existing = await this.getTaskById(id);
     if (!canManageTask(currentUser, existing)) {
-      throw new ForbiddenException('You do not have permission to update this task');
+      throw new ForbiddenException(
+        'You do not have permission to update this task',
+      );
     }
     const { projectId, assigneeId, ...rest } = dto;
     const wasDone = existing.status === TaskStatus.DONE;
@@ -129,17 +151,26 @@ export class TasksService {
     await this.taskRepository.save({
       id,
       ...rest,
-      ...(projectId !== undefined ? { project: projectId ? ({ id: projectId } as any) : null } : {}),
-      ...(assigneeId !== undefined ? { assignee: assigneeId ? ({ id: assigneeId } as any) : null } : {}),
+      ...(projectId !== undefined
+        ? { project: projectId ? ({ id: projectId } as any) : null }
+        : {}),
+      ...(assigneeId !== undefined
+        ? { assignee: assigneeId ? ({ id: assigneeId } as any) : null }
+        : {}),
       ...(!wasDone && willBeDone ? { completedAt: new Date() } : {}),
-      ...(wasDone && dto.status && dto.status !== TaskStatus.DONE ? { completedAt: null } : {}),
+      ...(wasDone && dto.status && dto.status !== TaskStatus.DONE
+        ? { completedAt: null }
+        : {}),
     });
 
     const updated = await this.getTaskById(id);
 
     await this.activitiesService.log({
       userId: currentUser.id,
-      type: !wasDone && willBeDone ? ActivityType.TASK_COMPLETED : ActivityType.TASK_UPDATED,
+      type:
+        !wasDone && willBeDone
+          ? ActivityType.TASK_COMPLETED
+          : ActivityType.TASK_UPDATED,
       entityType: 'task',
       entityId: updated.id,
       description:
@@ -151,8 +182,13 @@ export class TasksService {
     return updated;
   }
 
-  async bulkUpdateTasks(dto: BulkUpdateTasksDto, currentUser: User): Promise<Task[]> {
-    const tasks = await this.taskRepository.find({ where: { id: In(dto.ids) } });
+  async bulkUpdateTasks(
+    dto: BulkUpdateTasksDto,
+    currentUser: User,
+  ): Promise<Task[]> {
+    const tasks = await this.taskRepository.find({
+      where: { id: In(dto.ids) },
+    });
     if (tasks.length !== dto.ids.length) {
       const found = new Set(tasks.map((t) => t.id));
       const missing = dto.ids.filter((id) => !found.has(id));
@@ -174,16 +210,25 @@ export class TasksService {
         id: task.id,
         ...(status !== undefined ? { status } : {}),
         ...(priority !== undefined ? { priority } : {}),
-        ...(assigneeId !== undefined ? { assignee: { id: assigneeId } as any } : {}),
-        ...(projectId !== undefined ? { project: { id: projectId } as any } : {}),
+        ...(assigneeId !== undefined
+          ? { assignee: { id: assigneeId } as any }
+          : {}),
+        ...(projectId !== undefined
+          ? { project: { id: projectId } as any }
+          : {}),
         ...(!wasDone && willBeDone ? { completedAt: new Date() } : {}),
-        ...(wasDone && status && status !== TaskStatus.DONE ? { completedAt: null } : {}),
+        ...(wasDone && status && status !== TaskStatus.DONE
+          ? { completedAt: null }
+          : {}),
       });
       const full = await this.getTaskById(task.id);
       updated.push(full);
       await this.activitiesService.log({
         userId: currentUser.id,
-        type: !wasDone && willBeDone ? ActivityType.TASK_COMPLETED : ActivityType.TASK_UPDATED,
+        type:
+          !wasDone && willBeDone
+            ? ActivityType.TASK_COMPLETED
+            : ActivityType.TASK_UPDATED,
         entityType: 'task',
         entityId: full.id,
         description: `bulk-updated task '${full.title}'`,
@@ -195,7 +240,9 @@ export class TasksService {
   async deleteTask(id: number, currentUser: User): Promise<void> {
     const existing = await this.getTaskById(id);
     if (!canManageTask(currentUser, existing)) {
-      throw new ForbiddenException('You do not have permission to delete this task');
+      throw new ForbiddenException(
+        'You do not have permission to delete this task',
+      );
     }
     await this.taskRepository.softDelete(id);
   }

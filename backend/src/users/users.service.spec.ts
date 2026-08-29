@@ -8,7 +8,9 @@ import { UsersService } from './users.service';
 import { User, UserStatus } from './user.entity';
 import { Role } from '../roles/role.entity';
 
-jest.mock('bcryptjs', () => ({ hash: jest.fn().mockResolvedValue('hashed-password') }));
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn().mockResolvedValue('hashed-password'),
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -65,7 +67,9 @@ describe('UsersService', () => {
 
   describe('create', () => {
     it('rejects a duplicate email', async () => {
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue({ id: 1 } as User);
+      jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ id: 1 } as User);
 
       await expect(
         service.create({
@@ -116,18 +120,28 @@ describe('UsersService', () => {
 
   describe('setStatus', () => {
     it('revokes the refresh token when deactivating a user', async () => {
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue({ id: 1 } as User);
-      const updateSpy = jest.spyOn(userRepository, 'update').mockResolvedValue({} as any);
+      jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ id: 1 } as User);
+      const updateSpy = jest
+        .spyOn(userRepository, 'update')
+        .mockResolvedValue({} as any);
 
       await service.setStatus(1, UserStatus.INACTIVE);
 
-      expect(updateSpy).toHaveBeenCalledWith(1, { status: UserStatus.INACTIVE });
+      expect(updateSpy).toHaveBeenCalledWith(1, {
+        status: UserStatus.INACTIVE,
+      });
       expect(updateSpy).toHaveBeenCalledWith(1, { refreshTokenHash: null });
     });
 
     it('does not touch the refresh token when activating a user', async () => {
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue({ id: 1 } as User);
-      const updateSpy = jest.spyOn(userRepository, 'update').mockResolvedValue({} as any);
+      jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ id: 1 } as User);
+      const updateSpy = jest
+        .spyOn(userRepository, 'update')
+        .mockResolvedValue({} as any);
 
       await service.setStatus(1, UserStatus.ACTIVE);
 
@@ -138,7 +152,9 @@ describe('UsersService', () => {
 
   describe('remove', () => {
     it('throws NotFoundException when nothing was deleted', async () => {
-      jest.spyOn(userRepository, 'softDelete').mockResolvedValue({ affected: 0 } as any);
+      jest
+        .spyOn(userRepository, 'softDelete')
+        .mockResolvedValue({ affected: 0 } as any);
 
       await expect(service.remove(1)).rejects.toThrow(NotFoundException);
     });

@@ -12,17 +12,28 @@ import {
 import { TaskPriority, TaskStatus } from '../task.entity';
 
 export class BulkTaskChangesDto {
-  @ApiProperty({ description: 'New status to apply', enum: TaskStatus, required: false })
+  @ApiProperty({
+    description: 'New status to apply',
+    enum: TaskStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
-  @ApiProperty({ description: 'New priority to apply', enum: TaskPriority, required: false })
+  @ApiProperty({
+    description: 'New priority to apply',
+    enum: TaskPriority,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
 
-  @ApiProperty({ description: 'New assignee user ID to apply', required: false })
+  @ApiProperty({
+    description: 'New assignee user ID to apply',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   assigneeId?: number;
@@ -40,7 +51,10 @@ export class BulkUpdateTasksDto {
   @Type(() => Number)
   ids: number[];
 
-  @ApiProperty({ description: 'Fields to apply to every selected task', type: BulkTaskChangesDto })
+  @ApiProperty({
+    description: 'Fields to apply to every selected task',
+    type: BulkTaskChangesDto,
+  })
   @ValidateNested()
   @Type(() => BulkTaskChangesDto)
   changes: BulkTaskChangesDto;

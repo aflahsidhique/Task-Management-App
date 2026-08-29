@@ -10,7 +10,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CommentsService } from './comments.service';
 import { Comment } from './comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -26,7 +31,11 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @ApiOperation({ summary: 'List comments for a task or project' })
-  @ApiResponse({ status: 200, description: 'List of comments', type: [Comment] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of comments',
+    type: [Comment],
+  })
   @Get()
   findAll(@Query() query: ListCommentsQueryDto): Promise<Comment[]> {
     return this.commentsService.findAll(query);
@@ -35,13 +44,19 @@ export class CommentsController {
   @ApiOperation({ summary: 'Add a comment to a task or project' })
   @ApiResponse({ status: 201, description: 'Comment created', type: Comment })
   @Post()
-  create(@Body() dto: CreateCommentDto, @CurrentUser() user: User): Promise<Comment> {
+  create(
+    @Body() dto: CreateCommentDto,
+    @CurrentUser() user: User,
+  ): Promise<Comment> {
     return this.commentsService.create(dto, user.id);
   }
 
   @ApiOperation({ summary: 'Edit a comment' })
   @ApiResponse({ status: 200, description: 'Comment updated', type: Comment })
-  @ApiResponse({ status: 403, description: 'Only the author can edit this comment' })
+  @ApiResponse({
+    status: 403,
+    description: 'Only the author can edit this comment',
+  })
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,

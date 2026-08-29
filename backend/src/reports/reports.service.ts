@@ -33,14 +33,18 @@ export class ReportsService {
         if (createdAt) where.createdAt = createdAt;
         const totalTasks = await this.taskRepository.count({ where });
         const completedTasks = totalTasks
-          ? await this.taskRepository.count({ where: { ...where, status: TaskStatus.DONE } })
+          ? await this.taskRepository.count({
+              where: { ...where, status: TaskStatus.DONE },
+            })
           : 0;
         return {
           projectId: p.id,
           projectName: p.name,
           totalTasks,
           completedTasks,
-          completionRate: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
+          completionRate: totalTasks
+            ? Math.round((completedTasks / totalTasks) * 100)
+            : 0,
         };
       }),
     );
@@ -55,14 +59,18 @@ export class ReportsService {
         if (createdAt) where.createdAt = createdAt;
         const totalTasks = await this.taskRepository.count({ where });
         const completedTasks = totalTasks
-          ? await this.taskRepository.count({ where: { ...where, status: TaskStatus.DONE } })
+          ? await this.taskRepository.count({
+              where: { ...where, status: TaskStatus.DONE },
+            })
           : 0;
         return {
           userId: u.id,
           userName: u.fullName,
           totalTasks,
           completedTasks,
-          completionRate: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
+          completionRate: totalTasks
+            ? Math.round((completedTasks / totalTasks) * 100)
+            : 0,
         };
       }),
     ).then((rows) => rows.filter((r) => r.totalTasks > 0));
@@ -87,7 +95,9 @@ export class ReportsService {
     const today = new Date();
     return Promise.all(
       projects.map(async (p) => {
-        const totalTasks = await this.taskRepository.count({ where: { project: { id: p.id } } });
+        const totalTasks = await this.taskRepository.count({
+          where: { project: { id: p.id } },
+        });
         const completedTasks = totalTasks
           ? await this.taskRepository.count({
               where: { project: { id: p.id }, status: TaskStatus.DONE },
@@ -109,7 +119,9 @@ export class ReportsService {
           totalTasks,
           completedTasks,
           overdueTasks,
-          progressPercent: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
+          progressPercent: totalTasks
+            ? Math.round((completedTasks / totalTasks) * 100)
+            : 0,
         };
       }),
     );
@@ -135,7 +147,11 @@ export class ReportsService {
           return new Date(t.completedAt) <= new Date(t.dueDate);
         }).length;
         const overdueOpen = await this.taskRepository.count({
-          where: { ...where, status: Not(TaskStatus.DONE), dueDate: LessThan(new Date()) },
+          where: {
+            ...where,
+            status: Not(TaskStatus.DONE),
+            dueDate: LessThan(new Date()),
+          },
         });
 
         return {
@@ -144,7 +160,9 @@ export class ReportsService {
           totalAssigned,
           completedTasks: completedTasks.length,
           overdueOpenTasks: overdueOpen,
-          completionRate: Math.round((completedTasks.length / totalAssigned) * 100),
+          completionRate: Math.round(
+            (completedTasks.length / totalAssigned) * 100,
+          ),
           onTimeRate: completedTasks.length
             ? Math.round((onTime / completedTasks.length) * 100)
             : 0,
@@ -157,7 +175,9 @@ export class ReportsService {
   /** Daily created-vs-completed task counts over a date range (defaults to the last 30 days). */
   async taskCompletionTrend(from?: string, to?: string) {
     const end = to ? new Date(to) : new Date();
-    const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000);
+    const start = from
+      ? new Date(from)
+      : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000);
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
@@ -170,7 +190,11 @@ export class ReportsService {
 
     const days: { date: string; created: number; completed: number }[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      days.push({ date: d.toISOString().slice(0, 10), created: 0, completed: 0 });
+      days.push({
+        date: d.toISOString().slice(0, 10),
+        created: 0,
+        completed: 0,
+      });
     }
     const byDate = new Map(days.map((d) => [d.date, d]));
     for (const task of created) {
@@ -188,7 +212,9 @@ export class ReportsService {
   }
 
   /** Flat, paginated list of tasks that are currently overdue. */
-  async overdueTasks(query: PaginationQueryDto): Promise<PaginatedResult<Task>> {
+  async overdueTasks(
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Task>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const [items, totalItems] = await this.taskRepository.findAndCount({

@@ -52,7 +52,9 @@ describe('TasksService', () => {
       };
       jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(qb);
 
-      const result = await service.getAllTasks({ sortBy: 'not-a-real-column' } as any);
+      const result = await service.getAllTasks({
+        sortBy: 'not-a-real-column',
+      } as any);
 
       expect(qb.orderBy).toHaveBeenCalledWith('task.createdAt', 'DESC');
       expect(result.items).toEqual([{ id: 1 }]);
@@ -62,10 +64,15 @@ describe('TasksService', () => {
 
   describe('createTask', () => {
     it('creates a task, assigns the reporter, and logs an activity', async () => {
-      const dto: CreateTaskDto = { title: 'Test task', description: 'Test description' };
+      const dto: CreateTaskDto = {
+        title: 'Test task',
+        description: 'Test description',
+      };
       jest.spyOn(repository, 'create').mockReturnValue({ id: 1 } as Task);
       jest.spyOn(repository, 'save').mockResolvedValue({ id: 1 } as Task);
-      jest.spyOn(service, 'getTaskById').mockResolvedValue({ id: 1, title: 'Test task' } as Task);
+      jest
+        .spyOn(service, 'getTaskById')
+        .mockResolvedValue({ id: 1, title: 'Test task' } as Task);
 
       const result = await service.createTask(dto, 42);
 
@@ -86,7 +93,9 @@ describe('TasksService', () => {
       };
       jest.spyOn(repository, 'create').mockReturnValue({ id: 1 } as Task);
       jest.spyOn(repository, 'save').mockResolvedValue({ id: 1 } as Task);
-      jest.spyOn(service, 'getTaskById').mockResolvedValue({ id: 1, title: 'Test task' } as Task);
+      jest
+        .spyOn(service, 'getTaskById')
+        .mockResolvedValue({ id: 1, title: 'Test task' } as Task);
 
       await service.createTask(dto, 42);
 
@@ -107,7 +116,9 @@ describe('TasksService', () => {
       jest.spyOn(service, 'getTaskById').mockResolvedValue(existing);
       const outsider = { id: 1, role: { name: 'Developer' } } as User;
 
-      await expect(service.updateTask(1, {}, outsider)).rejects.toThrow(ForbiddenException);
+      await expect(service.updateTask(1, {}, outsider)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('stamps completedAt when a task transitions into DONE', async () => {
@@ -119,7 +130,9 @@ describe('TasksService', () => {
       } as Task;
       const manager = { id: 1, role: { name: 'Admin' } } as User;
       jest.spyOn(service, 'getTaskById').mockResolvedValue(existing);
-      const saveSpy = jest.spyOn(repository, 'save').mockResolvedValue({} as any);
+      const saveSpy = jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({} as any);
 
       await service.updateTask(1, { status: TaskStatus.DONE }, manager);
 
@@ -154,11 +167,23 @@ describe('TasksService', () => {
 
     it('applies the requested changes to every task the user can manage', async () => {
       const tasks = [
-        { id: 1, status: TaskStatus.TODO, assignee: { id: 1 }, reporter: { id: 1 } },
-        { id: 2, status: TaskStatus.TODO, assignee: { id: 1 }, reporter: { id: 1 } },
+        {
+          id: 1,
+          status: TaskStatus.TODO,
+          assignee: { id: 1 },
+          reporter: { id: 1 },
+        },
+        {
+          id: 2,
+          status: TaskStatus.TODO,
+          assignee: { id: 1 },
+          reporter: { id: 1 },
+        },
       ] as Task[];
       jest.spyOn(repository, 'find').mockResolvedValue(tasks);
-      const saveSpy = jest.spyOn(repository, 'save').mockResolvedValue({} as any);
+      const saveSpy = jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({} as any);
       jest
         .spyOn(service, 'getTaskById')
         .mockImplementation(async (id: number) => ({ id }) as Task);
@@ -176,9 +201,15 @@ describe('TasksService', () => {
 
   describe('deleteTask', () => {
     it('soft-deletes the task when the user can manage it', async () => {
-      const existing = { id: 1, assignee: { id: 1 }, reporter: { id: 1 } } as Task;
+      const existing = {
+        id: 1,
+        assignee: { id: 1 },
+        reporter: { id: 1 },
+      } as Task;
       jest.spyOn(service, 'getTaskById').mockResolvedValue(existing);
-      const softDeleteSpy = jest.spyOn(repository, 'softDelete').mockResolvedValue({} as any);
+      const softDeleteSpy = jest
+        .spyOn(repository, 'softDelete')
+        .mockResolvedValue({} as any);
       const owner = { id: 1, role: { name: 'Developer' } } as User;
 
       await service.deleteTask(1, owner);
@@ -187,11 +218,17 @@ describe('TasksService', () => {
     });
 
     it('rejects deletion from a user who neither owns nor manages the task', async () => {
-      const existing = { id: 1, assignee: { id: 99 }, reporter: { id: 99 } } as Task;
+      const existing = {
+        id: 1,
+        assignee: { id: 99 },
+        reporter: { id: 99 },
+      } as Task;
       jest.spyOn(service, 'getTaskById').mockResolvedValue(existing);
       const outsider = { id: 1, role: { name: 'Developer' } } as User;
 
-      await expect(service.deleteTask(1, outsider)).rejects.toThrow(ForbiddenException);
+      await expect(service.deleteTask(1, outsider)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 });

@@ -20,7 +20,11 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect((res) => {
         expect(res.body).toEqual(
-          expect.objectContaining({ success: true, statusCode: 200, data: 'Hello World!' }),
+          expect.objectContaining({
+            success: true,
+            statusCode: 200,
+            data: 'Hello World!',
+          }),
         );
       });
   });
@@ -30,7 +34,9 @@ describe('AppController (e2e)', () => {
       .get('/api/v1/does-not-exist')
       .expect(404)
       .expect((res) => {
-        expect(res.body).toEqual(expect.objectContaining({ success: false, statusCode: 404 }));
+        expect(res.body).toEqual(
+          expect.objectContaining({ success: false, statusCode: 404 }),
+        );
       });
   });
 

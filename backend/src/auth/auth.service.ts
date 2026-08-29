@@ -114,7 +114,8 @@ export class AuthService {
     // Same response whether or not the email exists, to avoid leaking which
     // addresses have accounts.
     return {
-      message: 'If an account exists for that email, a reset link has been sent.',
+      message:
+        'If an account exists for that email, a reset link has been sent.',
     };
   }
 
@@ -133,7 +134,9 @@ export class AuthService {
 
   async changePassword(userId: number, dto: ChangePasswordDto): Promise<void> {
     const user = await this.usersService.findById(userId);
-    const fullUser = await this.usersService.findByEmailWithPassword(user.email);
+    const fullUser = await this.usersService.findByEmailWithPassword(
+      user.email,
+    );
     const passwordMatches = await bcrypt.compare(
       dto.currentPassword,
       fullUser.passwordHash,
@@ -153,7 +156,11 @@ export class AuthService {
       jobTitle: user.jobTitle,
       avatarUrl: user.avatarUrl,
       role: user.role
-        ? { id: user.role.id, name: user.role.name, permissions: user.role.permissions }
+        ? {
+            id: user.role.id,
+            name: user.role.name,
+            permissions: user.role.permissions,
+          }
         : null,
     };
   }
@@ -174,7 +181,10 @@ export class AuthService {
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
       },
     );
-    await this.usersService.setRefreshTokenHash(user.id, this.hashToken(refreshToken));
+    await this.usersService.setRefreshTokenHash(
+      user.id,
+      this.hashToken(refreshToken),
+    );
     return { accessToken, refreshToken };
   }
 

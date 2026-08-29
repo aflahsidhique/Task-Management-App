@@ -1,5 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -93,7 +97,10 @@ export class UsersService {
       .getOne();
   }
 
-  async setRefreshTokenHash(id: number, refreshTokenHash: string | null): Promise<void> {
+  async setRefreshTokenHash(
+    id: number,
+    refreshTokenHash: string | null,
+  ): Promise<void> {
     await this.userRepository.update(id, { refreshTokenHash });
   }
 
@@ -119,7 +126,9 @@ export class UsersService {
       where: { id: createUserDto.roleId },
     });
     if (!role) {
-      throw new NotFoundException(`Role with ID ${createUserDto.roleId} not found`);
+      throw new NotFoundException(
+        `Role with ID ${createUserDto.roleId} not found`,
+      );
     }
     const passwordHash = await bcrypt.hash(createUserDto.password, SALT_ROUNDS);
     const user = this.userRepository.create({

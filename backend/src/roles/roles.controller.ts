@@ -9,7 +9,12 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import { Role } from './role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -39,7 +44,11 @@ export class RolesController {
   }
 
   @ApiOperation({ summary: 'Create a new role' })
-  @ApiResponse({ status: 201, description: 'Role created successfully', type: Role })
+  @ApiResponse({
+    status: 201,
+    description: 'Role created successfully',
+    type: Role,
+  })
   @Roles('Admin')
   @RequirePermissions('manage_roles')
   @Post()
@@ -48,7 +57,11 @@ export class RolesController {
   }
 
   @ApiOperation({ summary: 'Update a role by ID' })
-  @ApiResponse({ status: 200, description: 'Role updated successfully', type: Role })
+  @ApiResponse({
+    status: 200,
+    description: 'Role updated successfully',
+    type: Role,
+  })
   @ApiResponse({ status: 404, description: 'Role not found' })
   @Roles('Admin')
   @RequirePermissions('manage_roles')

@@ -18,17 +18,25 @@ export class ListTasksQueryDto extends PaginationQueryDto {
   @IsInt()
   assigneeId?: number;
 
-  @ApiPropertyOptional({ description: 'Filter by task status', enum: TaskStatus })
+  @ApiPropertyOptional({
+    description: 'Filter by task status',
+    enum: TaskStatus,
+  })
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by task priority', enum: TaskPriority })
+  @ApiPropertyOptional({
+    description: 'Filter by task priority',
+    enum: TaskPriority,
+  })
   @IsOptional()
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
 
-  @ApiPropertyOptional({ description: 'Only tasks assigned to the current user' })
+  @ApiPropertyOptional({
+    description: 'Only tasks assigned to the current user',
+  })
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()

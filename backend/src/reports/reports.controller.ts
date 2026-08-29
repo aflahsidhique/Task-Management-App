@@ -30,13 +30,19 @@ export class ReportsController {
     return this.reportsService.byStatus(from, to);
   }
 
-  @ApiOperation({ summary: 'Project progress report (completion % and overdue tasks per project)' })
+  @ApiOperation({
+    summary:
+      'Project progress report (completion % and overdue tasks per project)',
+  })
   @Get('project-progress')
   projectProgress() {
     return this.reportsService.projectProgress();
   }
 
-  @ApiOperation({ summary: 'User productivity report (workload, completion rate, on-time rate)' })
+  @ApiOperation({
+    summary:
+      'User productivity report (workload, completion rate, on-time rate)',
+  })
   @Get('user-productivity')
   userProductivity(@Query('from') from?: string, @Query('to') to?: string) {
     return this.reportsService.userProductivity(from, to);

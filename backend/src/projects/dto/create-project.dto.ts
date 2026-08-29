@@ -22,7 +22,11 @@ export class CreateProjectDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Status of the project', enum: ProjectStatus, required: false })
+  @ApiProperty({
+    description: 'Status of the project',
+    enum: ProjectStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(ProjectStatus)
   status?: ProjectStatus;
@@ -39,7 +43,11 @@ export class CreateProjectDto {
   @IsNumber()
   ownerId: number;
 
-  @ApiProperty({ description: 'IDs of the project members', type: [Number], required: false })
+  @ApiProperty({
+    description: 'IDs of the project members',
+    type: [Number],
+    required: false,
+  })
   @IsOptional()
   @IsArray()
   memberIds?: number[];

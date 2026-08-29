@@ -36,7 +36,9 @@ export class CommentsService {
 
   async findAll(query: ListCommentsQueryDto): Promise<Comment[]> {
     if (!query.taskId && !query.projectId) {
-      throw new BadRequestException('Provide a taskId or projectId to list comments');
+      throw new BadRequestException(
+        'Provide a taskId or projectId to list comments',
+      );
     }
     return this.commentRepository.find({
       where: {
@@ -57,11 +59,15 @@ export class CommentsService {
 
   async create(dto: CreateCommentDto, authorId: number): Promise<Comment> {
     if ((dto.taskId && dto.projectId) || (!dto.taskId && !dto.projectId)) {
-      throw new BadRequestException('Provide exactly one of taskId or projectId');
+      throw new BadRequestException(
+        'Provide exactly one of taskId or projectId',
+      );
     }
 
     const mentions = dto.mentionedUserIds?.length
-      ? await this.userRepository.find({ where: { id: In(dto.mentionedUserIds) } })
+      ? await this.userRepository.find({
+          where: { id: In(dto.mentionedUserIds) },
+        })
       : [];
 
     const comment = this.commentRepository.create({
@@ -90,7 +96,11 @@ export class CommentsService {
     return full;
   }
 
-  async update(id: number, dto: UpdateCommentDto, currentUser: User): Promise<Comment> {
+  async update(
+    id: number,
+    dto: UpdateCommentDto,
+    currentUser: User,
+  ): Promise<Comment> {
     const existing = await this.findById(id);
     if (existing.author.id !== currentUser.id) {
       throw new ForbiddenException('You can only edit your own comments');
@@ -98,7 +108,9 @@ export class CommentsService {
     const mentions =
       dto.mentionedUserIds !== undefined
         ? dto.mentionedUserIds.length
-          ? await this.userRepository.find({ where: { id: In(dto.mentionedUserIds) } })
+          ? await this.userRepository.find({
+              where: { id: In(dto.mentionedUserIds) },
+            })
           : []
         : existing.mentions;
 
@@ -115,7 +127,11 @@ export class CommentsService {
       (m) => !existing.mentions.some((em) => em.id === m.id),
     );
     if (newlyMentioned.length > 0) {
-      await this.notifyMentions({ ...updated, mentions: newlyMentioned }, entityType, entityId);
+      await this.notifyMentions(
+        { ...updated, mentions: newlyMentioned },
+        entityType,
+        entityId,
+      );
     }
 
     return updated;
@@ -124,9 +140,12 @@ export class CommentsService {
   async remove(id: number, currentUser: User): Promise<void> {
     const existing = await this.findById(id);
     const canManage =
-      existing.author.id === currentUser.id || MANAGE_ROLES.includes(currentUser.role?.name);
+      existing.author.id === currentUser.id ||
+      MANAGE_ROLES.includes(currentUser.role?.name);
     if (!canManage) {
-      throw new ForbiddenException('You do not have permission to delete this comment');
+      throw new ForbiddenException(
+        'You do not have permission to delete this comment',
+      );
     }
     await this.commentRepository.softDelete(id);
 

@@ -7,7 +7,10 @@ import { Role } from '../roles/role.entity';
 import { User } from '../users/user.entity';
 import { Project, ProjectStatus } from '../projects/project.entity';
 import { Task, TaskPriority, TaskStatus } from '../tasks/task.entity';
-import { Notification, NotificationType } from '../notifications/notification.entity';
+import {
+  Notification,
+  NotificationType,
+} from '../notifications/notification.entity';
 import { ActivitiesService } from '../activities/activities.service';
 import { ActivityType } from '../activities/activity.entity';
 
@@ -26,7 +29,8 @@ export class SeedService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     @InjectRepository(Task) private readonly taskRepository: Repository<Task>,
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
@@ -55,7 +59,8 @@ export class SeedService implements OnApplicationBootstrap {
     const definitions = [
       {
         name: 'Super Admin',
-        description: 'Unrestricted access to every module (implicitly bypasses role checks)',
+        description:
+          'Unrestricted access to every module (implicitly bypasses role checks)',
         permissions: [
           'manage_users',
           'manage_roles',
@@ -82,7 +87,12 @@ export class SeedService implements OnApplicationBootstrap {
       {
         name: 'Project Manager',
         description: 'Manages projects, tasks and reports',
-        permissions: ['manage_projects', 'manage_tasks', 'view_reports', 'manage_files'],
+        permissions: [
+          'manage_projects',
+          'manage_tasks',
+          'view_reports',
+          'manage_files',
+        ],
       },
       {
         name: 'Team Lead',
@@ -114,17 +124,72 @@ export class SeedService implements OnApplicationBootstrap {
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
     const definitions = [
-      { fullName: 'Muhammed N.', email: 'aflahgraphy@gmail.com', jobTitle: 'Project Manager', role: byName('Project Manager') },
-      { fullName: 'Sarah Khan', email: 'sarah.khan@example.com', jobTitle: 'Frontend Developer', role: byName('Developer') },
-      { fullName: 'Hisham Ali', email: 'hisham.ali@example.com', jobTitle: 'Backend Developer', role: byName('Developer') },
-      { fullName: 'Fathima Noor', email: 'fathima.noor@example.com', jobTitle: 'UI/UX Designer', role: byName('Designer') },
-      { fullName: 'Ramees P.', email: 'ramees.p@example.com', jobTitle: 'Full Stack Developer', role: byName('Developer') },
-      { fullName: 'Aneesha F.', email: 'aneesha.f@example.com', jobTitle: 'QA Engineer', role: byName('QA') },
-      { fullName: 'Navas K.', email: 'navas.k@example.com', jobTitle: 'Backend Developer', role: byName('Developer') },
-      { fullName: 'Layla S.', email: 'layla.s@example.com', jobTitle: 'Product Designer', role: byName('Designer') },
-      { fullName: 'Admin User', email: 'admin@example.com', jobTitle: 'System Administrator', role: byName('Admin') },
-      { fullName: 'Yusuf Rahman', email: 'yusuf.rahman@example.com', jobTitle: 'Super Administrator', role: byName('Super Admin') },
-      { fullName: 'Zainab Kutty', email: 'zainab.kutty@example.com', jobTitle: 'Team Lead', role: byName('Team Lead') },
+      {
+        fullName: 'Muhammed N.',
+        email: 'aflahgraphy@gmail.com',
+        jobTitle: 'Project Manager',
+        role: byName('Project Manager'),
+      },
+      {
+        fullName: 'Sarah Khan',
+        email: 'sarah.khan@example.com',
+        jobTitle: 'Frontend Developer',
+        role: byName('Developer'),
+      },
+      {
+        fullName: 'Hisham Ali',
+        email: 'hisham.ali@example.com',
+        jobTitle: 'Backend Developer',
+        role: byName('Developer'),
+      },
+      {
+        fullName: 'Fathima Noor',
+        email: 'fathima.noor@example.com',
+        jobTitle: 'UI/UX Designer',
+        role: byName('Designer'),
+      },
+      {
+        fullName: 'Ramees P.',
+        email: 'ramees.p@example.com',
+        jobTitle: 'Full Stack Developer',
+        role: byName('Developer'),
+      },
+      {
+        fullName: 'Aneesha F.',
+        email: 'aneesha.f@example.com',
+        jobTitle: 'QA Engineer',
+        role: byName('QA'),
+      },
+      {
+        fullName: 'Navas K.',
+        email: 'navas.k@example.com',
+        jobTitle: 'Backend Developer',
+        role: byName('Developer'),
+      },
+      {
+        fullName: 'Layla S.',
+        email: 'layla.s@example.com',
+        jobTitle: 'Product Designer',
+        role: byName('Designer'),
+      },
+      {
+        fullName: 'Admin User',
+        email: 'admin@example.com',
+        jobTitle: 'System Administrator',
+        role: byName('Admin'),
+      },
+      {
+        fullName: 'Yusuf Rahman',
+        email: 'yusuf.rahman@example.com',
+        jobTitle: 'Super Administrator',
+        role: byName('Super Admin'),
+      },
+      {
+        fullName: 'Zainab Kutty',
+        email: 'zainab.kutty@example.com',
+        jobTitle: 'Team Lead',
+        role: byName('Team Lead'),
+      },
     ];
 
     const users = definitions.map((d) =>
@@ -208,15 +273,37 @@ export class SeedService implements OnApplicationBootstrap {
 
   private async seedTasks(projects: Project[], users: User[]): Promise<void> {
     const today = new Date();
-    const statuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.DONE];
-    const priorities = [TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH];
+    const statuses = [
+      TaskStatus.TODO,
+      TaskStatus.IN_PROGRESS,
+      TaskStatus.IN_REVIEW,
+      TaskStatus.DONE,
+    ];
+    const priorities = [
+      TaskPriority.LOW,
+      TaskPriority.MEDIUM,
+      TaskPriority.HIGH,
+    ];
     const titles = [
-      'Design login page', 'API integration', 'Database optimization', 'UI/UX improvements',
-      'Write API documentation', 'Fix authentication bug', 'Update project documentation',
-      'User testing & feedback', 'Set up CI/CD pipeline', 'Refactor state management',
-      'Implement dark mode', 'Optimize image loading', 'Create onboarding flow',
-      'Add unit tests', 'Fix responsive layout issues', 'Set up error tracking',
-      'Design email templates', 'Build settings page', 'Improve search performance',
+      'Design login page',
+      'API integration',
+      'Database optimization',
+      'UI/UX improvements',
+      'Write API documentation',
+      'Fix authentication bug',
+      'Update project documentation',
+      'User testing & feedback',
+      'Set up CI/CD pipeline',
+      'Refactor state management',
+      'Implement dark mode',
+      'Optimize image loading',
+      'Create onboarding flow',
+      'Add unit tests',
+      'Fix responsive layout issues',
+      'Set up error tracking',
+      'Design email templates',
+      'Build settings page',
+      'Improve search performance',
       'Create user analytics dashboard',
     ];
 
@@ -255,7 +342,10 @@ export class SeedService implements OnApplicationBootstrap {
     for (const task of saved) {
       await this.activitiesService.log({
         userId: task.reporter?.id ?? task.assignee?.id,
-        type: task.status === TaskStatus.DONE ? ActivityType.TASK_COMPLETED : ActivityType.TASK_CREATED,
+        type:
+          task.status === TaskStatus.DONE
+            ? ActivityType.TASK_COMPLETED
+            : ActivityType.TASK_CREATED,
         entityType: 'task',
         entityId: task.id,
         description:
@@ -269,12 +359,42 @@ export class SeedService implements OnApplicationBootstrap {
 
   private async seedNotifications(user: User): Promise<void> {
     const definitions = [
-      { type: NotificationType.TASK_ASSIGNED, title: 'New task assigned', message: "You were assigned 'Design login page'", isRead: false },
-      { type: NotificationType.PROJECT_UPDATE, title: 'Project updated', message: "'Website Redesign' status changed to On Track", isRead: false },
-      { type: NotificationType.TASK_DUE, title: 'Task due soon', message: "'API integration' is due in 2 days", isRead: true },
-      { type: NotificationType.SYSTEM, title: 'Welcome to SNEC', message: 'Your account has been set up successfully', isRead: true },
-      { type: NotificationType.MENTION, title: 'You were mentioned', message: "Sarah Khan mentioned you in 'Database optimization'", isRead: false },
-      { type: NotificationType.PROJECT_UPDATE, title: 'New member added', message: "Fathima Noor joined 'Marketing Campaign'", isRead: true },
+      {
+        type: NotificationType.TASK_ASSIGNED,
+        title: 'New task assigned',
+        message: "You were assigned 'Design login page'",
+        isRead: false,
+      },
+      {
+        type: NotificationType.PROJECT_UPDATE,
+        title: 'Project updated',
+        message: "'Website Redesign' status changed to On Track",
+        isRead: false,
+      },
+      {
+        type: NotificationType.TASK_DUE,
+        title: 'Task due soon',
+        message: "'API integration' is due in 2 days",
+        isRead: true,
+      },
+      {
+        type: NotificationType.SYSTEM,
+        title: 'Welcome to SNEC',
+        message: 'Your account has been set up successfully',
+        isRead: true,
+      },
+      {
+        type: NotificationType.MENTION,
+        title: 'You were mentioned',
+        message: "Sarah Khan mentioned you in 'Database optimization'",
+        isRead: false,
+      },
+      {
+        type: NotificationType.PROJECT_UPDATE,
+        title: 'New member added',
+        message: "Fathima Noor joined 'Marketing Campaign'",
+        isRead: true,
+      },
     ];
     const notifications = definitions.map((d) =>
       this.notificationRepository.create({ ...d, user }),

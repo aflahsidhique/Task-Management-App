@@ -57,7 +57,11 @@ export class Task {
   @Column({ type: 'date', nullable: true })
   dueDate: Date;
 
-  @ManyToOne(() => Project, { eager: true, nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Project, {
+    eager: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   project: Project;
 

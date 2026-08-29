@@ -22,7 +22,9 @@ export default async function globalSetup(): Promise<void> {
   });
   await admin.connect();
   await admin.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`);
-  await admin.query(`CREATE DATABASE "${dbName}" OWNER "${process.env.DATABASE_USER}"`);
+  await admin.query(
+    `CREATE DATABASE "${dbName}" OWNER "${process.env.DATABASE_USER}"`,
+  );
   await admin.end();
 
   const dataSource = new DataSource(dataSourceOptions);

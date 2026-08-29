@@ -8,7 +8,11 @@ import { ActivitiesModule } from '../activities/activities.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Task]), ActivitiesModule, NotificationsModule],
+  imports: [
+    TypeOrmModule.forFeature([Task]),
+    ActivitiesModule,
+    NotificationsModule,
+  ],
   providers: [TasksService],
   controllers: [TasksController],
   exports: [TasksService],

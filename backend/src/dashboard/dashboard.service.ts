@@ -35,8 +35,12 @@ export class DashboardService {
 
   async getSummary(fromStr?: string, toStr?: string, currentUserId?: number) {
     const now = new Date();
-    const to = toStr ? new Date(toStr) : new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const from = fromStr ? new Date(fromStr) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const to = toStr
+      ? new Date(toStr)
+      : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const from = fromStr
+      ? new Date(fromStr)
+      : new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [
       stats,
@@ -115,36 +119,77 @@ export class DashboardService {
       prevOverdueTasks,
     ] = await Promise.all([
       this.projectRepository.count({ where: { createdAt: Between(from, to) } }),
-      this.projectRepository.count({ where: { createdAt: Between(prevFrom, prevTo) } }),
       this.projectRepository.count({
-        where: { status: Not(ProjectStatus.COMPLETED), createdAt: Between(from, to) },
+        where: { createdAt: Between(prevFrom, prevTo) },
       }),
       this.projectRepository.count({
-        where: { status: Not(ProjectStatus.COMPLETED), createdAt: Between(prevFrom, prevTo) },
+        where: {
+          status: Not(ProjectStatus.COMPLETED),
+          createdAt: Between(from, to),
+        },
       }),
-      this.taskRepository.count({ where: { status: TaskStatus.DONE, completedAt: Between(from, to) } }),
-      this.taskRepository.count({ where: { status: TaskStatus.DONE, completedAt: Between(prevFrom, prevTo) } }),
-      this.taskRepository.count({ where: { status: Not(TaskStatus.DONE), createdAt: Between(from, to) } }),
-      this.taskRepository.count({ where: { status: Not(TaskStatus.DONE), createdAt: Between(prevFrom, prevTo) } }),
-      this.taskRepository.count({ where: { status: Not(TaskStatus.DONE), dueDate: LessThan(today) } }),
+      this.projectRepository.count({
+        where: {
+          status: Not(ProjectStatus.COMPLETED),
+          createdAt: Between(prevFrom, prevTo),
+        },
+      }),
+      this.taskRepository.count({
+        where: { status: TaskStatus.DONE, completedAt: Between(from, to) },
+      }),
+      this.taskRepository.count({
+        where: {
+          status: TaskStatus.DONE,
+          completedAt: Between(prevFrom, prevTo),
+        },
+      }),
+      this.taskRepository.count({
+        where: { status: Not(TaskStatus.DONE), createdAt: Between(from, to) },
+      }),
+      this.taskRepository.count({
+        where: {
+          status: Not(TaskStatus.DONE),
+          createdAt: Between(prevFrom, prevTo),
+        },
+      }),
+      this.taskRepository.count({
+        where: { status: Not(TaskStatus.DONE), dueDate: LessThan(today) },
+      }),
       this.taskRepository.count({
         where: { status: Not(TaskStatus.DONE), dueDate: LessThan(prevTo) },
       }),
     ]);
 
     return {
-      totalProjects: { value: totalProjects, deltaPercent: this.delta(totalProjects, prevTotalProjects) },
-      activeProjects: { value: activeProjects, deltaPercent: this.delta(activeProjects, prevActiveProjects) },
-      completedTasks: { value: completedTasks, deltaPercent: this.delta(completedTasks, prevCompletedTasks) },
-      pendingTasks: { value: pendingTasks, deltaPercent: this.delta(pendingTasks, prevPendingTasks) },
-      overdueTasks: { value: overdueTasks, deltaPercent: this.delta(overdueTasks, prevOverdueTasks) },
+      totalProjects: {
+        value: totalProjects,
+        deltaPercent: this.delta(totalProjects, prevTotalProjects),
+      },
+      activeProjects: {
+        value: activeProjects,
+        deltaPercent: this.delta(activeProjects, prevActiveProjects),
+      },
+      completedTasks: {
+        value: completedTasks,
+        deltaPercent: this.delta(completedTasks, prevCompletedTasks),
+      },
+      pendingTasks: {
+        value: pendingTasks,
+        deltaPercent: this.delta(pendingTasks, prevPendingTasks),
+      },
+      overdueTasks: {
+        value: overdueTasks,
+        deltaPercent: this.delta(overdueTasks, prevOverdueTasks),
+      },
     };
   }
 
   private async computeTeamMembers(from: Date, to: Date) {
     const { prevTo } = this.previousWindow(from, to);
     const value = await this.userRepository.count();
-    const previous = await this.userRepository.count({ where: { createdAt: LessThan(prevTo) } });
+    const previous = await this.userRepository.count({
+      where: { createdAt: LessThan(prevTo) },
+    });
     return { value, deltaPercent: this.delta(value, previous || value) };
   }
 
@@ -160,7 +205,11 @@ export class DashboardService {
     for (const p of projects) {
       if (p.status === ProjectStatus.COMPLETED) buckets['Completed']++;
       else if (p.status === ProjectStatus.ON_HOLD) buckets['On Hold']++;
-      else if (p.status === ProjectStatus.ON_TRACK || p.status === ProjectStatus.AT_RISK || p.status === ProjectStatus.DELAYED)
+      else if (
+        p.status === ProjectStatus.ON_TRACK ||
+        p.status === ProjectStatus.AT_RISK ||
+        p.status === ProjectStatus.DELAYED
+      )
         buckets['In Progress']++;
       else buckets['Not Started']++;
     }
@@ -215,7 +264,10 @@ export class DashboardService {
           (!t.completedAt || new Date(t.completedAt) > dayDate),
       ).length;
       const overdue = tasks.filter(
-        (t) => t.dueDate && toDateOnly(new Date(t.dueDate)) === day && t.status !== TaskStatus.DONE,
+        (t) =>
+          t.dueDate &&
+          toDateOnly(new Date(t.dueDate)) === day &&
+          t.status !== TaskStatus.DONE,
       ).length;
       return { date: day, completed, inProgress, overdue };
     });
@@ -227,7 +279,10 @@ export class DashboardService {
     in14Days.setDate(today.getDate() + 14);
 
     const tasks = await this.taskRepository.find({
-      where: { dueDate: Between(today, in14Days), status: Not(TaskStatus.DONE) },
+      where: {
+        dueDate: Between(today, in14Days),
+        status: Not(TaskStatus.DONE),
+      },
       order: { dueDate: 'ASC' },
       take: 6,
     });
@@ -246,9 +301,13 @@ export class DashboardService {
     const projects = await this.projectRepository.find();
     const withProgress = await Promise.all(
       projects.map(async (p) => {
-        const total = await this.taskRepository.count({ where: { project: { id: p.id } } });
+        const total = await this.taskRepository.count({
+          where: { project: { id: p.id } },
+        });
         const done = total
-          ? await this.taskRepository.count({ where: { project: { id: p.id }, status: TaskStatus.DONE } })
+          ? await this.taskRepository.count({
+              where: { project: { id: p.id }, status: TaskStatus.DONE },
+            })
           : 0;
         return {
           id: p.id,
@@ -258,7 +317,9 @@ export class DashboardService {
         };
       }),
     );
-    return withProgress.sort((a, b) => b.progressPercent - a.progressPercent).slice(0, 5);
+    return withProgress
+      .sort((a, b) => b.progressPercent - a.progressPercent)
+      .slice(0, 5);
   }
 
   private async computeTeamWorkload() {
@@ -268,9 +329,13 @@ export class DashboardService {
         const taskCount = await this.taskRepository.count({
           where: { assignee: { id: u.id }, status: Not(TaskStatus.DONE) },
         });
-        const total = await this.taskRepository.count({ where: { assignee: { id: u.id } } });
+        const total = await this.taskRepository.count({
+          where: { assignee: { id: u.id } },
+        });
         const done = total
-          ? await this.taskRepository.count({ where: { assignee: { id: u.id }, status: TaskStatus.DONE } })
+          ? await this.taskRepository.count({
+              where: { assignee: { id: u.id }, status: TaskStatus.DONE },
+            })
           : 0;
         return {
           userId: u.id,
@@ -281,7 +346,10 @@ export class DashboardService {
         };
       }),
     );
-    return workload.filter((w) => w.taskCount > 0).sort((a, b) => b.taskCount - a.taskCount).slice(0, 6);
+    return workload
+      .filter((w) => w.taskCount > 0)
+      .sort((a, b) => b.taskCount - a.taskCount)
+      .slice(0, 6);
   }
 
   private async computeRecentProjects() {
@@ -291,9 +359,13 @@ export class DashboardService {
     });
     return Promise.all(
       projects.map(async (p) => {
-        const total = await this.taskRepository.count({ where: { project: { id: p.id } } });
+        const total = await this.taskRepository.count({
+          where: { project: { id: p.id } },
+        });
         const done = total
-          ? await this.taskRepository.count({ where: { project: { id: p.id }, status: TaskStatus.DONE } })
+          ? await this.taskRepository.count({
+              where: { project: { id: p.id }, status: TaskStatus.DONE },
+            })
           : 0;
         return {
           id: p.id,

@@ -15,7 +15,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Response } from 'express';
@@ -53,7 +58,10 @@ export class FilesController {
 
   @ApiOperation({ summary: 'Retrieve all files' })
   @Get()
-  findAll(@Query('projectId') projectId?: string, @Query('taskId') taskId?: string) {
+  findAll(
+    @Query('projectId') projectId?: string,
+    @Query('taskId') taskId?: string,
+  ) {
     return this.filesService.findAll(
       projectId ? parseInt(projectId, 10) : undefined,
       taskId ? parseInt(taskId, 10) : undefined,

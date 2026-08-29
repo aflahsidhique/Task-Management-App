@@ -34,7 +34,11 @@ export class Comment {
   task: Task | null;
 
   @Index()
-  @ManyToOne(() => Project, { eager: true, nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Project, {
+    eager: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   project: Project | null;
 

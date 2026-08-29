@@ -7,8 +7,13 @@ import { createTestApp } from './utils/test-app';
 const ADMIN = { email: 'admin@example.com', password: 'Demo@12345' };
 const DEVELOPER = { email: 'sarah.khan@example.com', password: 'Demo@12345' };
 
-async function login(app: INestApplication, creds: { email: string; password: string }) {
-  const res = await request(app.getHttpServer()).post('/api/v1/auth/login').send(creds);
+async function login(
+  app: INestApplication,
+  creds: { email: string; password: string },
+) {
+  const res = await request(app.getHttpServer())
+    .post('/api/v1/auth/login')
+    .send(creds);
   return res.body.data as { accessToken: string; user: { id: number } };
 }
 
@@ -128,6 +133,8 @@ describe('Projects, Tasks & Comments (e2e)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    expect(res.body.data.items.find((t: any) => t.id === taskId)).toBeUndefined();
+    expect(
+      res.body.data.items.find((t: any) => t.id === taskId),
+    ).toBeUndefined();
   });
 });

@@ -13,7 +13,11 @@ export class UpdateRoleDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Permissions granted to this role', type: [String], required: false })
+  @ApiProperty({
+    description: 'Permissions granted to this role',
+    type: [String],
+    required: false,
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

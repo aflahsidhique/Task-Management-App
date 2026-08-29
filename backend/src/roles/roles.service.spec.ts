@@ -14,7 +14,10 @@ describe('RolesService', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RolesService, { provide: getRepositoryToken(Role), useClass: Repository }],
+      providers: [
+        RolesService,
+        { provide: getRepositoryToken(Role), useClass: Repository },
+      ],
     }).compile();
 
     service = module.get<RolesService>(RolesService);
@@ -58,9 +61,9 @@ describe('RolesService', () => {
     it('throws NotFoundException when the role does not exist', async () => {
       jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
-      await expect(service.updateRole(999, { name: 'X' } as any)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.updateRole(999, { name: 'X' } as any),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('updates and returns the refreshed role', async () => {
@@ -69,7 +72,9 @@ describe('RolesService', () => {
         .spyOn(repository, 'findOne')
         .mockResolvedValueOnce(role)
         .mockResolvedValueOnce({ ...role, name: 'New' } as Role);
-      const updateSpy = jest.spyOn(repository, 'update').mockResolvedValue({} as any);
+      const updateSpy = jest
+        .spyOn(repository, 'update')
+        .mockResolvedValue({} as any);
 
       const result = await service.updateRole(1, { name: 'New' } as any);
 
@@ -80,13 +85,17 @@ describe('RolesService', () => {
 
   describe('deleteRole', () => {
     it('throws NotFoundException when nothing was deleted', async () => {
-      jest.spyOn(repository, 'softDelete').mockResolvedValue({ affected: 0 } as any);
+      jest
+        .spyOn(repository, 'softDelete')
+        .mockResolvedValue({ affected: 0 } as any);
 
       await expect(service.deleteRole(1)).rejects.toThrow(NotFoundException);
     });
 
     it('soft-deletes an existing role', async () => {
-      const spy = jest.spyOn(repository, 'softDelete').mockResolvedValue({ affected: 1 } as any);
+      const spy = jest
+        .spyOn(repository, 'softDelete')
+        .mockResolvedValue({ affected: 1 } as any);
 
       await service.deleteRole(1);
 
