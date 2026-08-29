@@ -1,9 +1,33 @@
-import { FormEvent, useEffect, useState } from 'react';
-import Button from '../ui/Button';
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { FaSave } from 'react-icons/fa';
+import Button from '../ui/Button';
+import FormField, { fieldClassName } from './FormField';
 import { TaskInput, TaskPriority, TaskStatus } from '../../services/taskService';
-import ProjectService, { Project } from '../../services/projectService';
-import UserService, { User } from '../../services/userService';
+import { useProjectsQuery } from '../../hooks/useProjects';
+import { useUsersQuery } from '../../hooks/useUsers';
+
+const optionalNumber = z
+  .union([z.number(), z.nan(), z.undefined()])
+  .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v))
+  .optional();
+
+const taskSchema = z.object({
+  title: z.string().trim().min(1, 'Title is required').max(200, 'Title is too long'),
+  description: z.string().trim().min(1, 'Description is required'),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+  dueDate: z.string().optional(),
+  projectId: optionalNumber,
+  assigneeId: optionalNumber,
+  estimatedHours: optionalNumber,
+  actualHours: optionalNumber,
+});
+
+type TaskFormValues = z.infer<typeof taskSchema>;
 
 interface TaskFormProps {
   initialData: {
@@ -14,136 +38,169 @@ interface TaskFormProps {
     dueDate?: string | null;
     project?: { id: number } | null;
     assignee?: { id: number } | null;
+    estimatedHours?: number | null;
+    actualHours?: number | null;
   };
   onSubmit: (task: TaskInput) => void;
   buttonText: string;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ initialData, onSubmit, buttonText }) => {
-  const [title, setTitle] = useState(initialData.title);
-  const [description, setDescription] = useState(initialData.description);
-  const [status, setStatus] = useState<TaskStatus>(initialData.status);
-  const [priority, setPriority] = useState<TaskPriority>(initialData.priority ?? 'MEDIUM');
-  const [dueDate, setDueDate] = useState(initialData.dueDate?.slice(0, 10) ?? '');
-  const [projectId, setProjectId] = useState<number | undefined>(initialData.project?.id);
-  const [assigneeId, setAssigneeId] = useState<number | undefined>(initialData.assignee?.id);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const { data: projectsResult } = useProjectsQuery({ limit: 1000 });
+  const { data: usersResult } = useUsersQuery({ limit: 1000 });
+  const projects = projectsResult?.items ?? [];
+  const users = usersResult?.items ?? [];
 
-  useEffect(() => {
-    ProjectService.getProjects().then(setProjects).catch(() => setProjects([]));
-    UserService.getUsers().then(setUsers).catch(() => setUsers([]));
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: initialData.title,
+      description: initialData.description,
+      status: initialData.status,
+      priority: initialData.priority ?? 'MEDIUM',
+      dueDate: initialData.dueDate?.slice(0, 10) ?? '',
+      projectId: initialData.project?.id,
+      assigneeId: initialData.assignee?.id,
+      estimatedHours: initialData.estimatedHours ?? undefined,
+      actualHours: initialData.actualHours ?? undefined,
+    },
+  });
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
+  const submit = (values: TaskFormValues) => {
     onSubmit({
-      title,
-      description,
-      status,
-      priority,
-      dueDate: dueDate || undefined,
-      projectId,
-      assigneeId,
+      title: values.title,
+      description: values.description,
+      status: values.status,
+      priority: values.priority,
+      dueDate: values.dueDate || undefined,
+      projectId: values.projectId,
+      assigneeId: values.assigneeId,
+      estimatedHours: values.estimatedHours,
+      actualHours: values.actualHours,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md space-y-5">
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="title">Title</label>
+    <form
+      onSubmit={handleSubmit(submit)}
+      className="p-6 bg-white dark:bg-slate-800 rounded-lg shadow-md space-y-5"
+    >
+      <FormField label="Title" htmlFor="title" error={errors.title?.message}>
         <input
-          type="text"
           id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
           placeholder="Title"
-          required
-          className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.title)}
+          {...register('title')}
         />
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="description">Description</label>
+      </FormField>
+
+      <FormField label="Description" htmlFor="description" error={errors.description?.message}>
         <textarea
           id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
           placeholder="Description"
-          required
-          className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           rows={4}
-        ></textarea>
-      </div>
+          className={fieldClassName(!!errors.description)}
+          {...register('description')}
+        />
+      </FormField>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2" htmlFor="status">Status</label>
-          <select
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as TaskStatus)}
-            className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
+        <FormField label="Status" htmlFor="status" error={errors.status?.message}>
+          <select id="status" className={fieldClassName()} {...register('status')}>
             <option value="TODO">TO DO</option>
             <option value="IN_PROGRESS">IN PROGRESS</option>
             <option value="IN_REVIEW">IN REVIEW</option>
             <option value="DONE">DONE</option>
           </select>
-        </div>
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2" htmlFor="priority">Priority</label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
+        </FormField>
+        <FormField label="Priority" htmlFor="priority" error={errors.priority?.message}>
+          <select id="priority" className={fieldClassName()} {...register('priority')}>
             <option value="LOW">LOW</option>
             <option value="MEDIUM">MEDIUM</option>
             <option value="HIGH">HIGH</option>
           </select>
-        </div>
+        </FormField>
       </div>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2" htmlFor="project">Project</label>
+        <FormField label="Project" htmlFor="project">
           <select
             id="project"
-            value={projectId ?? ''}
-            onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className={fieldClassName()}
+            {...register('projectId', {
+              setValueAs: (v) => (v === '' ? undefined : Number(v)),
+            })}
           >
             <option value="">No project</option>
             {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2" htmlFor="assignee">Assignee</label>
+        </FormField>
+        <FormField label="Assignee" htmlFor="assignee">
           <select
             id="assignee"
-            value={assigneeId ?? ''}
-            onChange={(e) => setAssigneeId(e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className={fieldClassName()}
+            {...register('assigneeId', {
+              setValueAs: (v) => (v === '' ? undefined : Number(v)),
+            })}
           >
             <option value="">Unassigned</option>
             {users.map((u) => (
-              <option key={u.id} value={u.id}>{u.fullName}</option>
+              <option key={u.id} value={u.id}>
+                {u.fullName}
+              </option>
             ))}
           </select>
-        </div>
+        </FormField>
       </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="dueDate">Due Date</label>
-        <input
-          type="date"
-          id="dueDate"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
+
+      <div className="grid grid-cols-3 gap-4">
+        <FormField label="Due Date" htmlFor="dueDate">
+          <input
+            type="date"
+            id="dueDate"
+            className={fieldClassName()}
+            {...register('dueDate')}
+          />
+        </FormField>
+        <FormField
+          label="Estimated Hours"
+          htmlFor="estimatedHours"
+          error={errors.estimatedHours?.message}
+        >
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            id="estimatedHours"
+            className={fieldClassName(!!errors.estimatedHours)}
+            {...register('estimatedHours', { valueAsNumber: true })}
+          />
+        </FormField>
+        <FormField
+          label="Actual Hours"
+          htmlFor="actualHours"
+          error={errors.actualHours?.message}
+        >
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            id="actualHours"
+            className={fieldClassName(!!errors.actualHours)}
+            {...register('actualHours', { valueAsNumber: true })}
+          />
+        </FormField>
       </div>
-      <Button type="submit" text={buttonText} icon={<FaSave />} />
+
+      <Button type="submit" text={isSubmitting ? 'Saving...' : buttonText} icon={<FaSave />} disabled={isSubmitting} />
     </form>
   );
 };

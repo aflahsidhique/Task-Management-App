@@ -1,99 +1,144 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import Button from '../ui/Button';
+import { useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { FaSave } from 'react-icons/fa';
-import RoleService, { Role } from '../../services/roleService';
+import Button from '../ui/Button';
+import FormField, { fieldClassName } from './FormField';
+import { useRolesQuery } from '../../hooks/useRoles';
 
 interface UserFormProps {
   initialData: {
     fullName: string;
     email: string;
     jobTitle: string;
+    mobile?: string;
     roleId: number;
   };
-  onSubmit: (data: { fullName: string; email: string; password?: string; jobTitle?: string; roleId: number }) => void;
+  onSubmit: (data: {
+    fullName: string;
+    email: string;
+    password?: string;
+    jobTitle?: string;
+    mobile?: string;
+    roleId: number;
+  }) => void;
   buttonText: string;
   requirePassword?: boolean;
 }
 
-const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, buttonText, requirePassword }) => {
-  const [fullName, setFullName] = useState(initialData.fullName);
-  const [email, setEmail] = useState(initialData.email);
-  const [jobTitle, setJobTitle] = useState(initialData.jobTitle);
-  const [roleId, setRoleId] = useState(initialData.roleId);
-  const [password, setPassword] = useState('');
-  const [roles, setRoles] = useState<Role[]>([]);
+const UserForm: React.FC<UserFormProps> = ({
+  initialData,
+  onSubmit,
+  buttonText,
+  requirePassword,
+}) => {
+  const { data: roles = [] } = useRolesQuery();
 
-  useEffect(() => {
-    RoleService.getRoles().then(setRoles).catch(() => setRoles([]));
-  }, []);
+  const userSchema = useMemo(
+    () =>
+      z.object({
+        fullName: z.string().trim().min(1, 'Full name is required'),
+        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email'),
+        jobTitle: z.string().trim().optional(),
+        mobile: z.string().trim().optional(),
+        roleId: z.number({ message: 'Select a role' }).min(1, 'Select a role'),
+        password: requirePassword
+          ? z.string().min(8, 'Password must be at least 8 characters')
+          : z
+              .string()
+              .optional()
+              .refine((v) => !v || v.length >= 8, 'Password must be at least 8 characters'),
+      }),
+    [requirePassword],
+  );
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    onSubmit({ fullName, email, jobTitle, roleId, ...(password ? { password } : {}) });
+  type UserFormValues = z.infer<typeof userSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      fullName: initialData.fullName,
+      email: initialData.email,
+      jobTitle: initialData.jobTitle,
+      mobile: initialData.mobile ?? '',
+      roleId: initialData.roleId || undefined,
+      password: '',
+    },
+  });
+
+  const submit = (values: UserFormValues) => {
+    onSubmit({
+      fullName: values.fullName,
+      email: values.email,
+      jobTitle: values.jobTitle,
+      mobile: values.mobile,
+      roleId: values.roleId,
+      ...(values.password ? { password: values.password } : {}),
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md space-y-5">
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="fullName">Full Name</label>
+    <form
+      onSubmit={handleSubmit(submit)}
+      className="p-6 bg-white dark:bg-slate-800 rounded-lg shadow-md space-y-5"
+    >
+      <FormField label="Full Name" htmlFor="fullName" error={errors.fullName?.message}>
         <input
           id="fullName"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          required
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.fullName)}
+          {...register('fullName')}
         />
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="email">Email</label>
+      </FormField>
+      <FormField label="Email" htmlFor="email" error={errors.email?.message}>
         <input
           id="email"
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.email)}
+          {...register('email')}
         />
+      </FormField>
+      <div className="grid grid-cols-2 gap-4">
+        <FormField label="Job Title" htmlFor="jobTitle">
+          <input id="jobTitle" className={fieldClassName()} {...register('jobTitle')} />
+        </FormField>
+        <FormField label="Mobile" htmlFor="mobile">
+          <input id="mobile" className={fieldClassName()} {...register('mobile')} />
+        </FormField>
       </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="jobTitle">Job Title</label>
-        <input
-          id="jobTitle"
-          value={jobTitle}
-          onChange={(e) => setJobTitle(e.target.value)}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="role">Role</label>
+      <FormField label="Role" htmlFor="role" error={errors.roleId?.message}>
         <select
           id="role"
-          value={roleId}
-          onChange={(e) => setRoleId(Number(e.target.value))}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.roleId)}
+          {...register('roleId', { valueAsNumber: true })}
         >
-          <option value={0}>Select role</option>
+          <option value="">Select role</option>
           {roles.map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
           ))}
         </select>
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">
-          {requirePassword ? 'Password' : 'Password (leave blank to keep unchanged)'}
-        </label>
+      </FormField>
+      <FormField
+        label={requirePassword ? 'Password' : 'Password (leave blank to keep unchanged)'}
+        htmlFor="password"
+        error={errors.password?.message}
+      >
         <input
           id="password"
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required={requirePassword}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.password)}
+          {...register('password')}
         />
-      </div>
-      <Button type="submit" text={buttonText} icon={<FaSave />} />
+      </FormField>
+      <Button type="submit" text={isSubmitting ? 'Saving...' : buttonText} icon={<FaSave />} disabled={isSubmitting} />
     </form>
   );
 };

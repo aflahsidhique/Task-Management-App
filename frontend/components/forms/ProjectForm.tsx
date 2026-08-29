@@ -1,10 +1,32 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import Button from '../ui/Button';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { FaSave } from 'react-icons/fa';
+import Button from '../ui/Button';
+import FormField, { fieldClassName } from './FormField';
 import { ProjectInput, ProjectStatus } from '../../services/projectService';
-import UserService, { User } from '../../services/userService';
+import { useUsersQuery } from '../../hooks/useUsers';
+
+const statuses: ProjectStatus[] = ['ON_TRACK', 'AT_RISK', 'DELAYED', 'COMPLETED', 'ON_HOLD'];
+
+const projectSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required').max(200),
+    description: z.string().trim().optional(),
+    status: z.enum(['ON_TRACK', 'AT_RISK', 'DELAYED', 'COMPLETED', 'ON_HOLD']),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().min(1, 'End date is required'),
+    ownerId: z.number({ message: 'Select an owner' }).min(1, 'Select an owner'),
+    memberIds: z.array(z.number()),
+  })
+  .refine((data) => data.endDate >= data.startDate, {
+    message: 'End date must be on or after the start date',
+    path: ['endDate'],
+  });
+
+type ProjectFormValues = z.infer<typeof projectSchema>;
 
 interface ProjectFormProps {
   initialData: {
@@ -20,107 +42,114 @@ interface ProjectFormProps {
   buttonText: string;
 }
 
-const statuses: ProjectStatus[] = ['ON_TRACK', 'AT_RISK', 'DELAYED', 'COMPLETED', 'ON_HOLD'];
-
 const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSubmit, buttonText }) => {
-  const [name, setName] = useState(initialData.name);
-  const [description, setDescription] = useState(initialData.description);
-  const [status, setStatus] = useState<ProjectStatus>(initialData.status);
-  const [startDate, setStartDate] = useState(initialData.startDate?.slice(0, 10) ?? '');
-  const [endDate, setEndDate] = useState(initialData.endDate?.slice(0, 10) ?? '');
-  const [ownerId, setOwnerId] = useState(initialData.ownerId);
-  const [memberIds, setMemberIds] = useState<number[]>(initialData.memberIds);
-  const [users, setUsers] = useState<User[]>([]);
+  const { data: usersResult } = useUsersQuery({ limit: 1000 });
+  const users = usersResult?.items ?? [];
 
-  useEffect(() => {
-    UserService.getUsers().then(setUsers).catch(() => setUsers([]));
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      name: initialData.name,
+      description: initialData.description,
+      status: initialData.status,
+      startDate: initialData.startDate?.slice(0, 10) ?? '',
+      endDate: initialData.endDate?.slice(0, 10) ?? '',
+      ownerId: initialData.ownerId || undefined,
+      memberIds: initialData.memberIds,
+    },
+  });
 
+  const memberIds = watch('memberIds');
   const toggleMember = (id: number) => {
-    setMemberIds((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]));
+    setValue(
+      'memberIds',
+      memberIds.includes(id) ? memberIds.filter((m) => m !== id) : [...memberIds, id],
+      { shouldValidate: true },
+    );
   };
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    onSubmit({ name, description, status, startDate, endDate, ownerId, memberIds });
+  const submit = (values: ProjectFormValues) => {
+    onSubmit({
+      name: values.name,
+      description: values.description,
+      status: values.status,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      ownerId: values.ownerId,
+      memberIds: values.memberIds,
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md space-y-5">
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="name">Name</label>
-        <input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="description">Description</label>
+    <form
+      onSubmit={handleSubmit(submit)}
+      className="p-6 bg-white dark:bg-slate-800 rounded-lg shadow-md space-y-5"
+    >
+      <FormField label="Name" htmlFor="name" error={errors.name?.message}>
+        <input id="name" className={fieldClassName(!!errors.name)} {...register('name')} />
+      </FormField>
+
+      <FormField label="Description" htmlFor="description" error={errors.description?.message}>
         <textarea
           id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.description)}
+          {...register('description')}
         />
-      </div>
+      </FormField>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2" htmlFor="startDate">Start Date</label>
+        <FormField label="Start Date" htmlFor="startDate" error={errors.startDate?.message}>
           <input
             id="startDate"
             type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className={fieldClassName(!!errors.startDate)}
+            {...register('startDate')}
           />
-        </div>
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2" htmlFor="endDate">End Date</label>
+        </FormField>
+        <FormField label="End Date" htmlFor="endDate" error={errors.endDate?.message}>
           <input
             id="endDate"
             type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className={fieldClassName(!!errors.endDate)}
+            {...register('endDate')}
           />
-        </div>
+        </FormField>
       </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="status">Status</label>
-        <select
-          id="status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
+
+      <FormField label="Status" htmlFor="status">
+        <select id="status" className={fieldClassName()} {...register('status')}>
           {statuses.map((s) => (
-            <option key={s} value={s}>{s.replace('_', ' ')}</option>
+            <option key={s} value={s}>
+              {s.replace('_', ' ')}
+            </option>
           ))}
         </select>
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2" htmlFor="owner">Owner</label>
+      </FormField>
+
+      <FormField label="Owner" htmlFor="owner" error={errors.ownerId?.message}>
         <select
           id="owner"
-          value={ownerId}
-          onChange={(e) => setOwnerId(Number(e.target.value))}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className={fieldClassName(!!errors.ownerId)}
+          {...register('ownerId', { valueAsNumber: true })}
         >
-          <option value={0}>Select owner</option>
+          <option value="">Select owner</option>
           {users.map((u) => (
-            <option key={u.id} value={u.id}>{u.fullName}</option>
+            <option key={u.id} value={u.id}>
+              {u.fullName}
+            </option>
           ))}
         </select>
-      </div>
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2">Members</label>
-        <div className="flex flex-wrap gap-2">
+      </FormField>
+
+      <FormField label="Members" htmlFor="members">
+        <div id="members" className="flex flex-wrap gap-2">
           {users.map((u) => (
             <button
               type="button"
@@ -129,15 +158,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, onSubmit, button
               className={`px-3 py-1.5 rounded-full text-sm border ${
                 memberIds.includes(u.id)
                   ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-gray-600 border-gray-200'
+                  : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700'
               }`}
             >
               {u.fullName}
             </button>
           ))}
         </div>
-      </div>
-      <Button type="submit" text={buttonText} icon={<FaSave />} />
+      </FormField>
+
+      <Button type="submit" text={isSubmitting ? 'Saving...' : buttonText} icon={<FaSave />} disabled={isSubmitting} />
     </form>
   );
 };
