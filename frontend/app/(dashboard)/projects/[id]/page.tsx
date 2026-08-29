@@ -79,10 +79,15 @@ export default function ProjectDetailPage() {
         {tasks.length === 0 ? (
           <p className="text-sm text-gray-400">No tasks yet.</p>
         ) : (
-          <ul className="divide-y divide-gray-50">
+          <ul className="divide-y divide-gray-50 dark:divide-slate-700">
             {tasks.map((t) => (
               <li key={t.id} className="py-3 flex items-center justify-between">
-                <span className="text-sm text-gray-700">{t.title}</span>
+                <Link
+                  href={`/tasks/${t.id}`}
+                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-primary hover:underline"
+                >
+                  {t.title}
+                </Link>
                 <Badge variant={statusToVariant(t.status)}>{statusLabel(t.status)}</Badge>
               </li>
             ))}

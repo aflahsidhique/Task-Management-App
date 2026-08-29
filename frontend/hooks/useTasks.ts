@@ -9,7 +9,9 @@ import TaskService, {
 
 export const taskKeys = {
   all: ['tasks'] as const,
-  list: (filters: TaskFilters) => [...taskKeys.all, 'list', filters] as const,
+  lists: ['tasks', 'list'] as const,
+  list: (filters: TaskFilters) => [...taskKeys.lists, filters] as const,
+  detail: (id: number) => [...taskKeys.all, 'detail', id] as const,
 };
 
 export function useTasksQuery(filters: TaskFilters) {
@@ -17,6 +19,14 @@ export function useTasksQuery(filters: TaskFilters) {
     queryKey: taskKeys.list(filters),
     queryFn: () => TaskService.getTasksPage(filters),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useTaskQuery(id: number) {
+  return useQuery({
+    queryKey: taskKeys.detail(id),
+    queryFn: () => TaskService.getTaskById(id),
+    enabled: !!id,
   });
 }
 
@@ -53,9 +63,9 @@ export function useDeleteTask() {
     // Optimistically remove the task from every cached task list immediately,
     // rolling back if the request fails.
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: taskKeys.all });
+      await queryClient.cancelQueries({ queryKey: taskKeys.lists });
       const previous = queryClient.getQueriesData<PaginatedResult<Task>>({
-        queryKey: taskKeys.all,
+        queryKey: taskKeys.lists,
       });
       previous.forEach(([key, data]) => {
         if (!data) return;

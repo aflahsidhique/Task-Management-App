@@ -11,10 +11,19 @@ interface TaskItemProps {
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, handleDelete }) => {
   return (
-    <tr className="border-b border-gray-100 bg-white hover:bg-gray-50">
-      <td className="px-5 py-4 text-sm text-gray-900 font-medium">{task.title}</td>
-      <td className="px-5 py-4 text-sm text-gray-500">{task.project?.name ?? '—'}</td>
-      <td className="px-5 py-4 text-sm text-gray-500">
+    <tr className="border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+      <td className="px-5 py-4 text-sm font-medium">
+        <Link
+          href={`/tasks/${task.id}`}
+          className="text-gray-900 dark:text-gray-100 hover:text-primary hover:underline"
+        >
+          {task.title}
+        </Link>
+      </td>
+      <td className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
+        {task.project?.name ?? '—'}
+      </td>
+      <td className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
         {task.assignee ? (
           <div className="flex items-center gap-2">
             <Avatar name={task.assignee.fullName} avatarUrl={task.assignee.avatarUrl} size="sm" />
@@ -24,7 +33,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, handleDelete }) => {
           '—'
         )}
       </td>
-      <td className="px-5 py-4 text-sm text-gray-500">
+      <td className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
         {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '—'}
       </td>
       <td className="px-5 py-4 text-sm">
