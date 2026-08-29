@@ -163,7 +163,10 @@ export class AuthService {
       role: user.role?.name,
     });
     const refreshToken = this.jwtService.sign(
-      { sub: user.id, type: 'refresh' },
+      // A random jti guarantees each refresh token is unique even when two
+      // are issued within the same second (JWT `iat` has 1s resolution),
+      // which would otherwise make reuse-detection on rotation a no-op.
+      { sub: user.id, type: 'refresh', jti: crypto.randomUUID() },
       {
         secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',

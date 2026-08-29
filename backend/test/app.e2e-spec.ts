@@ -1,25 +1,40 @@
 /* eslint-disable prettier/prettier */
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import request from 'supertest';
+import { createTestApp } from './utils/test-app';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createTestApp();
   });
 
-  it('/ (GET)', () => {
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('GET /api/v1/health returns a wrapped success envelope', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api/v1/health')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body).toEqual(
+          expect.objectContaining({ success: true, statusCode: 200, data: 'Hello World!' }),
+        );
+      });
+  });
+
+  it('an unknown route returns a wrapped 404 error envelope', () => {
+    return request(app.getHttpServer())
+      .get('/api/v1/does-not-exist')
+      .expect(404)
+      .expect((res) => {
+        expect(res.body).toEqual(expect.objectContaining({ success: false, statusCode: 404 }));
+      });
+  });
+
+  it('a protected route without a token is rejected with 401', () => {
+    return request(app.getHttpServer()).get('/api/v1/users').expect(401);
   });
 });
